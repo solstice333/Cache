@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.5
 import unittest
 from cache import Cache
+from custom_exceptions import *
 
 class CacheTest(unittest.TestCase):
    def setUp(self):
@@ -34,6 +35,13 @@ class CacheTest(unittest.TestCase):
    def test_str(self):
       self.assertEqual(str(self.c2),
                        'Cache([(\'blueberry\', 1), (\'cherry\', 3), (\'strawberry\', 2)])')
+
+   def test_max_cap(self):
+      c = Cache()
+      with self.assertRaises(MaxCapacityError):
+         for i in range(11):
+            c[i] = i
+
 
 if __name__ == '__main__':
    unittest.main()
