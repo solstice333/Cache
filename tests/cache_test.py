@@ -16,6 +16,10 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c2['strawberry'], 2)
       self.assertEqual(len(c2), 3)
 
+      print(c2)
+      c2['blueberry'] = 3
+      print(c2)
+
    def test_del(self):
       c2 = self.c2
       self.assertTrue('cherry' in c2)
@@ -34,14 +38,10 @@ class CacheTest(unittest.TestCase):
 
    def test_str(self):
       self.assertEqual(str(self.c2),
-                       'Cache([(\'blueberry\', 1), (\'cherry\', 3), (\'strawberry\', 2)])')
-
-   def test_max_cap(self):
-      c = Cache()
-      with self.assertRaises(MaxCapacityError):
-         for i in range(11):
-            c[i] = i
-
+                       'Cache: OrderedDict([('
+                       '\'blueberry\', 1), '
+                       '(\'cherry\', 3), '
+                       '(\'strawberry\', 2)])')
 
 if __name__ == '__main__':
    unittest.main()

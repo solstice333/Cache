@@ -1,16 +1,75 @@
 #!/usr/bin/env python3.5
 from collections import OrderedDict
-from custom_exceptions import *
+from collections.abc import MutableMapping
 
-class Cache(OrderedDict):
+class Cache(MutableMapping):
+    __marker = object()
+
     def __init__(self, capacity=10, init_values=None):
-        self.capacity = capacity
-        super().__init__(init_values or {})
+        self._capacity = capacity
+        self._cache = OrderedDict(init_values or {})
+
+    def __getitem__(self, key):
+        try:
+            val = self._cache.pop(key)
+        except KeyError:
+            return None
+
+        self._cache[key] = val
+        return val
 
     def __setitem__(self, key, val):
-        if (len(self) >= self.capacity):
-            raise MaxCapacityError()
-        super().__setitem__(key, val)
+        try:
+            self._cache.pop(key)
+        except KeyError:
+            if (len(self._cache) >= self._capacity):
+                self._cache.popitem(last=False)
+        self._cache[key] = val
+
+    def __delitem__(self, key):
+        del self._cache[key]
+
+    def __len__(self):
+        return len(self._cache)
+
+    def items(self):
+        return self._cache.items()
+
+    def __iter__(self):
+        return iter(self._cache)
+
+    def keys(self):
+        return self._cache.keys()
+
+    def values(self):
+        return self._cache.values()
 
     def __str__(self):
-        return super().__str__()
+        return "Cache: {}".format(self._cache)
+
+    def __contains__(self, item):
+        return item in self._cache
+
+    def get(self, key, default=None):
+        return self._cache.get(key, default)
+
+    def __eq__(self, other):
+        return self._cache == other and self._capacity
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def pop(self, key, default=__marker):
+        return self.cache.pop(key) if default == Cache.__marker \
+            else self.cache.pop(key, default)
+
+    def popitem(self, last=True):
+        return self.cache.popitem(last)
+
+    def clear(self):
+        self.cache.clear()
+
+    def update(*args, **kwds):
+        self, *args = args
+        self.cache.update(args, kwds)
+
