@@ -9,6 +9,18 @@ class Cache(MutableMapping):
         self._capacity = capacity
         self._cache = OrderedDict(init_values or {})
 
+    @property
+    def capacity(self):
+        return self._capacity
+
+    @capacity.setter
+    def capacity(self, new_cap):
+        self._capacity = new_cap
+        trim = len(self._cache) - self._capacity
+        if (trim > 0):
+            for i in range(trim):
+                self.popitem(last=True)
+
     def __getitem__(self, key):
         try:
             val = self._cache.pop(key)
@@ -72,4 +84,3 @@ class Cache(MutableMapping):
 
     def update(self, other):
         self._cache.update(other)
-

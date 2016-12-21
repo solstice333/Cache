@@ -4,6 +4,7 @@ from cache import Cache
 from custom_exceptions import *
 from copy import deepcopy
 
+
 class CacheTest(unittest.TestCase):
    def setUp(self):
       d = {'cherry':3, 'blueberry':1, 'strawberry':2}
@@ -117,6 +118,37 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c1, Cache(
          init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
           ('cherry', 3), ('strawberry', 2)]))
+
+   def test_cap_change(self):
+      c = deepcopy(self.c3)
+      c.update(self.c2)
+      c.capacity = 6
+      self.assertEqual(
+         c, Cache(capacity=6,
+                  init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
+                               ('cherry', 3), ('strawberry', 2)]))
+      c.capacity = 5
+      self.assertEqual(
+         c, Cache(capacity=5,
+                  init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
+                               ('cherry', 3), ('strawberry', 2)]))
+      c.capacity = 4
+      self.assertEqual(
+         c, Cache(capacity=4,
+                  init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
+                               ('cherry', 3)]))
+
+   def test_lru_func(self):
+      c = deepcopy(self.c2)
+      c.capacity = 4
+      c['tangerine'] = 4
+      c['mango'] = 5
+      c['strawberry'] = 6
+      self.assertEqual(
+         c, Cache(capacity=4,
+                  init_values=[('cherry', 3), ('tangerine', 4),
+                               ('mango', 5), ('strawberry', 6)]))
+
 
 if __name__ == '__main__':
    unittest.main()
