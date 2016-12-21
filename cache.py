@@ -13,4 +13,4 @@ class Cache(OrderedDict):
         super().__setitem__(key, val)
 
     def __str__(self):
-        return "Cache: {}".format(dict(self))
+        return super().__str__()

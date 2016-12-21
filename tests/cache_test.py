@@ -31,5 +31,9 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(next(i2), ('blueberry', 1))
       self.assertEqual(next(i2), ('cherry', 3))
 
+   def test_str(self):
+      self.assertEqual(str(self.c2),
+                       'Cache([(\'blueberry\', 1), (\'cherry\', 3), (\'strawberry\', 2)])')
+
 if __name__ == '__main__':
    unittest.main()
