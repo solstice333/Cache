@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from collections.abc import MutableMapping
 
+
 class Cache(MutableMapping):
     __marker = object()
 
