@@ -82,5 +82,6 @@ class Cache(MutableMapping):
     def clear(self):
         self._cache.clear()
 
-    def update(self, other):
-        self._cache.update(other)
+    def update(*args, **kwds):
+        self, *args = args
+        self._cache.update(*args)
