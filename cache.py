@@ -54,22 +54,22 @@ class Cache(MutableMapping):
         return self._cache.get(key, default)
 
     def __eq__(self, other):
-        return self._cache == other and self._capacity
+        return self._cache == other._cache and \
+               self._capacity == other._capacity
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def pop(self, key, default=__marker):
-        return self.cache.pop(key) if default == Cache.__marker \
-            else self.cache.pop(key, default)
+        return self._cache.pop(key) if default == Cache.__marker \
+            else self._cache.pop(key, default)
 
     def popitem(self, last=True):
-        return self.cache.popitem(last)
+        return self._cache.popitem(last)
 
     def clear(self):
-        self.cache.clear()
+        self._cache.clear()
 
-    def update(*args, **kwds):
-        self, *args = args
-        self.cache.update(args, kwds)
+    def update(self, other):
+        self._cache.update(other)
 
