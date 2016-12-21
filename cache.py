@@ -2,19 +2,15 @@
 from collections import OrderedDict
 from custom_exceptions import *
 
-class Cache():
+class Cache(OrderedDict):
     def __init__(self, capacity=10, init_values=None):
         self.capacity = capacity
-        self._page_map = OrderedDict(init_values or {})
-
-    def __getitem__(self, key):
-        return self._page_map[key]
+        super().__init__(init_values or {})
 
     def __setitem__(self, key, val):
         if (len(self) >= self.capacity):
             raise MaxCapacityError()
-        self._page_map[key] = val
+        super().__setitem__(key, val)
 
-    def __len__(self):
-        return len(self._page_map)
-
+    def __str__(self):
+        return "Cache: {}".format(dict(self))
