@@ -18,8 +18,8 @@
       <file leaf-file-name="cache.py" pinned="false" current-in-tab="true">
         <entry file="file://$USER_HOME$/Dropbox/python_workspace/Cache/cache.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-915">
-              <caret line="4" column="0" lean-forward="true" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+            <state relative-caret-position="-1620">
+              <caret line="8" column="17" lean-forward="true" selection-start-line="8" selection-start-column="17" selection-end-line="8" selection-end-column="17" />
               <folding>
                 <element signature="e#25#60#0" expanded="true" />
               </folding>
@@ -40,8 +40,8 @@
       <file leaf-file-name="cache_test.py" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1800">
-              <caret line="120" column="0" lean-forward="true" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
+            <state relative-caret-position="115">
+              <caret line="104" column="48" lean-forward="true" selection-start-line="104" selection-start-column="48" selection-end-line="104" selection-end-column="48" />
               <folding>
                 <element signature="e#25#40#0" expanded="true" />
               </folding>
@@ -72,15 +72,15 @@
         <option value="$USER_HOME$/Dropbox/python_workspace/LRUCache/lru_cache.py" />
         <option value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/test_cache.py" />
         <option value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/custom_exceptions.py" />
-        <option value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
-        <option value="$USER_HOME$/Dropbox/python_workspace/Cache/cache.py" />
         <option value="$USER_HOME$/Dropbox/python_workspace/Cache/custom_exceptions.py" />
+        <option value="$USER_HOME$/Dropbox/python_workspace/Cache/cache.py" />
+        <option value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="85" />
-    <option name="y" value="59" />
+    <option name="x" value="14" />
+    <option name="y" value="39" />
     <option name="width" value="1168" />
     <option name="height" value="797" />
   </component>
@@ -124,10 +124,6 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="cache.py" />
               <option name="myItemType" value="com.jetbrains.python.projectView.PyFileNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Cache" />
-              <option name="myItemType" value="com.jetbrains.python.projectView.PyElementNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -201,7 +197,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest CacheTest.test_popitem" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest CacheTest.test_foo" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -213,7 +209,7 @@
       <module name="Cache" />
       <option name="SCRIPT_NAME" value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
       <option name="CLASS_NAME" value="CacheTest" />
-      <option name="METHOD_NAME" value="test_popitem" />
+      <option name="METHOD_NAME" value="test_foo" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -223,7 +219,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest CacheTest.test_update" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest CacheTest.test_setitem" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -235,7 +231,7 @@
       <module name="Cache" />
       <option name="SCRIPT_NAME" value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
       <option name="CLASS_NAME" value="CacheTest" />
-      <option name="METHOD_NAME" value="test_update" />
+      <option name="METHOD_NAME" value="test_setitem" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -245,7 +241,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest CacheTest.test_lru_func" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest CacheTest.test_str" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -257,7 +253,7 @@
       <module name="Cache" />
       <option name="SCRIPT_NAME" value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
       <option name="CLASS_NAME" value="CacheTest" />
-      <option name="METHOD_NAME" value="test_lru_func" />
+      <option name="METHOD_NAME" value="test_str" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -267,7 +263,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest CacheTest.test_cap_change" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest CacheTest.test_pop" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -279,7 +275,7 @@
       <module name="Cache" />
       <option name="SCRIPT_NAME" value="$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py" />
       <option name="CLASS_NAME" value="CacheTest" />
-      <option name="METHOD_NAME" value="test_cap_change" />
+      <option name="METHOD_NAME" value="test_pop" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -425,18 +421,18 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in cache_test" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_popitem" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_update" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_lru_func" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_cap_change" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_foo" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_setitem" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_str" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_pop" />
     </list>
     <recent_temporary>
       <list size="5">
         <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in cache_test" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_update" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_lru_func" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_cap_change" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_popitem" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_pop" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_str" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_foo" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest CacheTest.test_setitem" />
       </list>
     </recent_temporary>
   </component>
@@ -454,39 +450,39 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 28m 08s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 32m 58s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 31m 29s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 34m 47s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 31m 56s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 37m 19s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 32m 27s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 37m 41s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 34m 22s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 37m 53s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 34m 23s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_pop - 2016.12.21 at 18h 38m 06s.xml">
+      <configuration name="Unittest CacheTest.test_pop" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_CacheTest_test_update - 2016.12.21 at 01h 35m 45s.xml">
-      <configuration name="Unittest CacheTest.test_update" configurationId="tests" />
+    <history-entry file="Unittest_CacheTest_test_str - 2016.12.21 at 18h 21m 11s.xml">
+      <configuration name="Unittest CacheTest.test_str" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 01h 25m 35s.xml">
+    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 18h 21m 20s.xml">
       <configuration name="Unittests in cache_test" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 01h 35m 49s.xml">
+    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 18h 28m 52s.xml">
       <configuration name="Unittests in cache_test" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 01h 35m 52s.xml">
+    <history-entry file="Unittests_in_cache_test - 2016.12.21 at 18h 38m 17s.xml">
       <configuration name="Unittests in cache_test" configurationId="tests" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="85" y="59" width="1168" height="797" extended-state="0" />
+    <frame x="14" y="39" width="1168" height="797" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1969178" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -499,7 +495,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24957983" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39908257" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39835164" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -513,7 +509,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="2" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -544,8 +540,8 @@
     </entry>
     <entry file="file://$USER_HOME$/Dropbox/python_workspace/Cache/tests/cache_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1800">
-          <caret line="120" column="0" lean-forward="true" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
+        <state relative-caret-position="115">
+          <caret line="104" column="48" lean-forward="true" selection-start-line="104" selection-start-column="48" selection-end-line="104" selection-end-column="48" />
           <folding>
             <element signature="e#25#40#0" expanded="true" />
           </folding>
@@ -554,8 +550,8 @@
     </entry>
     <entry file="file://$USER_HOME$/Dropbox/python_workspace/Cache/cache.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-915">
-          <caret line="4" column="0" lean-forward="true" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+        <state relative-caret-position="-1620">
+          <caret line="8" column="17" lean-forward="true" selection-start-line="8" selection-start-column="17" selection-end-line="8" selection-end-column="17" />
           <folding>
             <element signature="e#25#60#0" expanded="true" />
           </folding>

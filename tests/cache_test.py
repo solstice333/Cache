@@ -11,6 +11,12 @@ class CacheTest(unittest.TestCase):
       self.c1 = Cache()
       self.c2 = Cache(init_values=sorted(d.items()))
       self.c3 = Cache(init_values=[('foo',1),('bar',2)])
+      self.c4 = Cache(init_values={'a':1, 'b':2})
+
+      self.assertRaises(TypeError, Cache, init_values='foo')
+
+   def test_foo(self):
+      print(self.c2)
 
    def test_contains(self):
       self.assertTrue('strawberry' in self.c2)
@@ -65,13 +71,15 @@ class CacheTest(unittest.TestCase):
    def test_len(self):
       self.assertEqual(len(self.c2), 3)
       self.assertEqual(len(self.c1), 0)
+      self.assertEqual(len(self.c3), 2)
+      self.assertEqual(len(self.c4), 2)
 
    def test_str(self):
       self.assertEqual(str(self.c2),
-                       'Cache: OrderedDict([('
-                       '\'blueberry\', 1), '
-                       '(\'cherry\', 3), '
-                       '(\'strawberry\', 2)])')
+                       'Cache: ['
+                       '(blueberry, (True, 1)), '
+                       '(cherry, (True, 3)), '
+                       '(strawberry, (True, 2))]')
 
    def test_clear(self):
       c = deepcopy(self.c3)
@@ -101,6 +109,7 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c.pop('foo'), 1)
       self.assertEqual(c.pop('foo', None), None)
       self.assertEqual(c.pop('foo', 0), 0)
+      self.assertRaises(KeyError, c.pop, 'foo')
 
    def test_popitem(self):
       c = deepcopy(self.c2)
@@ -127,6 +136,7 @@ class CacheTest(unittest.TestCase):
          c, Cache(capacity=6,
                   init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
                                ('cherry', 3), ('strawberry', 2)]))
+
       c.capacity = 5
       self.assertEqual(
          c, Cache(capacity=5,
