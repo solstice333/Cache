@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.5
 import unittest
 from cache import Cache
-from custom_exceptions import *
 from copy import deepcopy
 
 

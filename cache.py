@@ -2,6 +2,9 @@
 from collections import OrderedDict
 from collections.abc import MutableMapping
 
+class CacheMiss(Exception):
+   def __str__(self):
+      return "Cache miss"
 
 class Cache(MutableMapping):
    __marker = object()
@@ -29,8 +32,26 @@ class Cache(MutableMapping):
    def _values(self):
       return self._cache.values()
 
-   def __init__(self, capacity=10, init_values=None):
+   def _pop(self, key, default=__marker, unwrap=False):
+      item = self._cache.pop(key) if default == Cache.__marker \
+         else self._cache.pop(key, default)
+      try:
+         return item.val if unwrap else item
+      except AttributeError:
+         return item
+
+   def _recurs_pop(self, key):
+      try:
+         return self._pop(key)
+      except KeyError:
+         try:
+            return self._lower_mem._recurs_pop(key)
+         except AttributeError:
+            raise CacheMiss
+
+   def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
+      self._lower_mem = lower_mem
 
       try:
          if isinstance(init_values, list):
@@ -65,12 +86,7 @@ class Cache(MutableMapping):
             self.popitem(last=True)
 
    def __getitem__(self, key):
-      try:
-         item = self._cache.pop(key)
-      except KeyError:
-         return None
-
-      item.dirty = True
+      item = self._recurs_pop(key)
       self._cache[key] = item
       return item.val
 
@@ -122,12 +138,7 @@ class Cache(MutableMapping):
       return not self.__eq__(other)
 
    def pop(self, key, default=__marker):
-      item = self._cache.pop(key) if default == Cache.__marker \
-         else self._cache.pop(key, default)
-      try:
-         return item.val
-      except AttributeError:
-         return item
+      return self._pop(key, default, True)
 
    def popitem(self, last=True):
       return self._cache.popitem(last)
