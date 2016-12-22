@@ -112,9 +112,9 @@ class CacheTest(unittest.TestCase):
 
    def test_popitem(self):
       c = deepcopy(self.c2)
-      c.popitem()
+      self.assertEqual(c.popitem(), ('strawberry', 2))
       self.assertEqual(c, Cache(init_values=[('blueberry',1), ('cherry',3)]))
-      c.popitem(False)
+      self.assertEqual(c.popitem(False), ('blueberry', 1))
       self.assertEqual(c, Cache(init_values=[('cherry',3)]))
 
    def test_update(self):

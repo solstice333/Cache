@@ -145,7 +145,8 @@ class Cache(MutableMapping):
       return self._pop(key, default, True)
 
    def popitem(self, last=True):
-      return self._cache.popitem(last)
+      entry = self._cache.popitem(last)
+      return entry[0], entry[1].val
 
    def clear(self):
       self._cache.clear()
