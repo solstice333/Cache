@@ -1,10 +1,6 @@
 #!/usr/bin/env python3.5
 import unittest
-from cache import Cache
-from cache import CacheMiss
-from cache import BackingStore
-from cache import BStoreClosedError
-from cache import NoBStoreError
+from cache import *
 from copy import deepcopy
 import os.path
 import os
