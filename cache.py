@@ -316,17 +316,32 @@ class Cache(MutableMapping):
          return default
 
    # TODO: implement open and close of bstore from the top level cache
-   # def _get_lowest_mem(self):
-   #    mem = self
-   #    while mem.lower_mem is not None:
-   #       mem = self.lower_mem
-   #
-   # def open_bstore(self):
-   #    mem = self._get_lowest_mem()
-   #    if self.lower_mem is None:
-   #       raise NoBStoreError
-   #    self._bstore.open()
-   #
-   # def close_bstore(self):
-   #    if self._bstore is not None:
-   #       self._bstore.close()
+   def _get_lowest_mem(self):
+      mem = self
+      try:
+         while mem.lower_mem is not None:
+            mem = mem.lower_mem
+      except AttributeError:
+         pass
+      return mem
+
+   def _is_lowest_mem_bstore(self):
+      return isinstance(self._get_lowest_mem(), BackingStore)
+
+   def open_bstore(self):
+      if not self._is_lowest_mem_bstore():
+         raise NoBStoreError
+      bs = self._get_lowest_mem()
+      bs.open()
+
+   def close_bstore(self):
+      if self._is_lowest_mem_bstore():
+         bs = self._get_lowest_mem()
+         bs.close()
+
+   def bstore_closed(self):
+      if self._is_lowest_mem_bstore():
+         bs = self._get_lowest_mem()
+         return bs.closed()
+      else:
+         return True

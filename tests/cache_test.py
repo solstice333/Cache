@@ -4,6 +4,7 @@ from cache import Cache
 from cache import CacheMiss
 from cache import BackingStore
 from cache import BStoreClosedError
+from cache import NoBStoreError
 from copy import deepcopy
 import os.path
 import os
@@ -19,6 +20,11 @@ class CacheTest(unittest.TestCase):
       while mem is not None:
          print("  {}".format(mem))
          mem = mem.lower_mem
+
+   @staticmethod
+   def rm_or_noop(file):
+      if os.path.isfile(file):
+         os.remove(file)
 
    def setUp(self):
       d = {'cherry':3, 'blueberry':1, 'strawberry':2}
@@ -315,13 +321,9 @@ class CacheTest(unittest.TestCase):
          for c, i in zip(string.ascii_lowercase[:len], range(1, max + 1)):
             bs[c] = i
 
-      def rm_or_noop(file):
-         if os.path.isfile(file):
-            os.remove(file)
-
-      rm_or_noop('foo.db')
-      rm_or_noop('bar.db')
-      rm_or_noop('baz.db')
+      CacheTest.rm_or_noop('foo.db')
+      CacheTest.rm_or_noop('bar.db')
+      CacheTest.rm_or_noop('baz.db')
 
       bs = BackingStore()
       self.assertEqual(bs.capacity, 10)
@@ -458,17 +460,35 @@ class CacheTest(unittest.TestCase):
 
       self.assertEqual(str(bs), 'BackingStore: closed')
 
-      rm_or_noop('foo.db')
-      rm_or_noop('bar.db')
-      rm_or_noop('baz.db')
+      CacheTest.rm_or_noop('foo.db')
+      CacheTest.rm_or_noop('bar.db')
+      CacheTest.rm_or_noop('baz.db')
 
-   # def test_2_lv_cache_with_bstore(self):
-   #    bs = BackingStore(3)
-   #    c2 = Cache(2, lower_mem=bs)
-   #    c = Cache(1, lower_mem=c2)
-   #
-   #    c.open_bstore()
-   #    c.close_bstore()
+   def test_2_lv_cache_with_bstore(self):
+      ct = CacheTest
+
+      ct.rm_or_noop('bstore.db')
+
+      c = Cache(1)
+      self.assertTrue(c.bstore_closed())
+      self.assertRaises(NoBStoreError, c.open_bstore)
+
+      c2 = Cache(2)
+      c = Cache(1, lower_mem=c2)
+      self.assertTrue(c.bstore_closed())
+      self.assertRaises(NoBStoreError, c.open_bstore)
+
+      bs = BackingStore(3)
+      c2 = Cache(2, lower_mem=bs)
+      c = Cache(1, lower_mem=c2)
+
+      self.assertTrue(c.bstore_closed())
+      c.open_bstore()
+      self.assertFalse(c.bstore_closed())
+      c.close_bstore()
+      self.assertTrue(c.bstore_closed())
+
+      ct.rm_or_noop('bstore.db')
 
 
 if __name__ == '__main__':
