@@ -35,7 +35,7 @@ class BackingStore(MutableMapping):
       self._capacity = capacity
       self._dbname = dbname
       self._db = None
-      self._nondirty_list = None
+      self._nondirty_map = {}
 
    @property
    def capacity(self):
@@ -115,9 +115,12 @@ class BackingStore(MutableMapping):
       return self._db.pop(key) if default == BackingStore.__marker \
          else self._db.pop(key, default)
 
-   # TODO
    def popitem(self):
       self._raise_on_bstore_closed()
+      for k in self.keys():
+         if k not in self._nondirty_map:
+            return k, self._db.pop(k)
+      # TODO send the popped data to the cache that's getting desynced
       return self._db.popitem()
 
    def clear(self):
@@ -220,6 +223,18 @@ class Cache(MutableMapping):
                   self._lower_mem[item[0]] = item[1].val
       self._cache[key] = Cache._Val(dirty, val)
 
+   def _send_bs_nondirties(self, *more):
+      if self._is_lowest_mem_bstore():
+         bs = self._get_lowest_mem()
+         nondirty_map = dict([*more])
+
+         mem = self
+         while mem is not bs:
+            nondirty_map.update(
+               {k: v.val for k, v in mem._items() if not v.dirty})
+            mem = mem.lower_mem
+         bs._nondirty_map = nondirty_map
+
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
       self._lower_mem = lower_mem
@@ -269,10 +284,12 @@ class Cache(MutableMapping):
       item, from_bstore = self._recurs_pop_unless_from_bs(key)
       item = item if from_bstore else item.val
       dirty = False if from_bstore else True
+      self._send_bs_nondirties((key, item))
       self._setitem(key, item, dirty)
       return item
 
    def __setitem__(self, key, val):
+      self._send_bs_nondirties()
       self._setitem(key, val)
 
    def __delitem__(self, key):
