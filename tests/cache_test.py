@@ -660,8 +660,10 @@ class CacheTest(unittest.TestCase):
       CacheTest.rm_or_noop('bstore.db')
 
       bs = BackingStore(3)
+      self.assertTrue(bs.closed())
       c2 = Cache(2, lower_mem=bs)
       with Cache(1, lower_mem=c2) as top_cache:
+         self.assertFalse(top_cache.bstore_closed())
          top_cache['a'] = 1
          top_cache['b'] = 2
          top_cache['c'] = 3
@@ -669,9 +671,22 @@ class CacheTest(unittest.TestCase):
          top_cache['e'] = 5
          top_cache['f'] = 6
          print(CacheTest.cascade_dump(top_cache))
-         some_value = top_cache['d']
-         some_value = top_cache['b']
+         self.assertEqual(top_cache['d'], 4)
+         self.assertEqual(top_cache['b'], 2)
          print(CacheTest.cascade_dump(top_cache))
+      self.assertTrue(top_cache.bstore_closed())
+
+      bs = BackingStore(3)
+      self.assertTrue(bs.closed())
+      c2 = Cache(2, lower_mem=bs)
+      with Cache(1, lower_mem=c2) as top_cache:
+         self.assertFalse(top_cache.bstore_closed())
+         print(CacheTest.cascade_dump(top_cache))
+         self.assertEqual(top_cache['b'], 2)
+         self.assertEqual(top_cache['c'], 3)
+         self.assertEqual(top_cache['e'], 5)
+         print(CacheTest.cascade_dump(top_cache))
+      self.assertTrue(top_cache.bstore_closed())
 
       CacheTest.rm_or_noop('bstore.db')
 
