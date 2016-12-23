@@ -606,8 +606,58 @@ class CacheTest(unittest.TestCase):
                 "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
       self.assertEqual(ct.cascade_dump(c), exp_str)
 
+      bs.clear()
       c.close_bstore()
 
+      c.clear()
+      c2.clear()
+
+      self.assertTrue(c.bstore_closed())
+      with Cache(1, lower_mem=c2) as c:
+         def populate_multilevel_cache(c, len):
+            max = len
+            for k, v in zip(string.ascii_lowercase[:max], range(1, max + 1)):
+               c[k] = v
+
+         self.assertFalse(c.bstore_closed())
+         populate_multilevel_cache(c, 6)
+
+         c['d'] = 44
+         exp_str = "cascade dump:\n" + \
+                   "   Cache: [(d, (True, 44))]\n" + \
+                   "   Cache: [(e, (True, 5)), (f, (True, 6))]\n" + \
+                   "   BackingStore: [('a', 1), ('b', 2), ('c', 3)]\n"
+         self.assertEqual(ct.cascade_dump(c), exp_str)
+
+         c['f'] = 66
+         exp_str = "cascade dump:\n" + \
+                   "   Cache: [(f, (True, 66))]\n" + \
+                   "   Cache: [(e, (True, 5)), (d, (True, 44))]\n" + \
+                   "   BackingStore: [('a', 1), ('b', 2), ('c', 3)]\n"
+         self.assertEqual(ct.cascade_dump(c), exp_str)
+
+         c['b'] = 22
+         exp_str = "cascade dump:\n" + \
+                   "   Cache: [(b, (True, 22))]\n" + \
+                   "   Cache: [(d, (True, 44)), (f, (True, 66))]\n" + \
+                   "   BackingStore: [('b', 2), ('c', 3), ('e', 5)]\n"
+         self.assertEqual(ct.cascade_dump(c), exp_str)
+
+         c['c']
+         exp_str = "cascade dump:\n" + \
+                   "   Cache: [(c, (False, 3))]\n" + \
+                   "   Cache: [(f, (True, 66)), (b, (True, 22))]\n" + \
+                   "   BackingStore: [('c', 3), ('d', 44), ('e', 5)]\n"
+         self.assertEqual(ct.cascade_dump(c), exp_str)
+
+         c['d']
+         exp_str = "cascade dump:\n" + \
+                   "   Cache: [(d, (False, 44))]\n" + \
+                   "   Cache: [(b, (True, 22)), (c, (False, 3))]\n" + \
+                   "   BackingStore: [('c', 3), ('d', 44), ('f', 66)]\n"
+         self.assertEqual(ct.cascade_dump(c), exp_str)
+
+      self.assertTrue(c.bstore_closed())
       ct.rm_or_noop('bstore.db')
 
 

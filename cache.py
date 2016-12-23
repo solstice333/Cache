@@ -415,4 +415,11 @@ class Cache(MutableMapping):
          return True
 
    # TODO: implement open and close of bstore from the top level cache as context man
+   def __enter__(self):
+      self.open_bstore()
+      return self
+
+   def __exit__(self, exc_type, exc_val, exc_tb):
+      self.close_bstore()
+      return False
 
