@@ -22,6 +22,11 @@ class BackingStore(MutableMapping):
       if self.closed():
          raise BStoreClosedError
 
+   def _trim_to_capacity(self):
+      if self._db is not None:
+         while len(self._db) > self._capacity:
+            self._db.popitem()
+
    def __init__(self, capacity=10, dbname='bstore'):
       self._capacity = capacity
       self._dbname = dbname
@@ -34,9 +39,7 @@ class BackingStore(MutableMapping):
    @capacity.setter
    def capacity(self, new_cap):
       self._capacity = new_cap
-      if self._db:
-         while len(self._db) > self._capacity:
-            self._db.popitem()
+      self._trim_to_capacity()
 
    @property
    def dbname(self):
@@ -44,6 +47,7 @@ class BackingStore(MutableMapping):
 
    def open(self):
       self._db = shelve.open(self._dbname)
+      self._trim_to_capacity()
 
    def close(self):
       if self._db is not None:
@@ -124,11 +128,14 @@ class BackingStore(MutableMapping):
 
    def __str__(self):
       ldump = []
-      for k, v in self.items():
-         ldump.append((k, v))
-      ldump.sort(key=lambda t: t[0])
-      ldump = [str(i) for i in ldump]
-      return "BackingStore: [{}]".format(", ".join(ldump))
+      try:
+         for k, v in self.items():
+            ldump.append((k, v))
+         ldump.sort(key=lambda t: t[0])
+         ldump = [str(i) for i in ldump]
+         return "BackingStore: [{}]".format(", ".join(ldump))
+      except BStoreClosedError:
+         return "BackingStore: closed"
 
    def __enter__(self):
       self.open()

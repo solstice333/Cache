@@ -3,7 +3,7 @@ import unittest
 from cache import Cache
 from cache import CacheMiss
 from cache import BackingStore
-from cache import NoBStoreError
+from cache import BStoreClosedError
 from copy import deepcopy
 import os.path
 import os
@@ -398,13 +398,16 @@ class CacheTest(unittest.TestCase):
       del bs['a']
       self.assertEqual(bs.setdefault('a'), None)
 
+      bs.clear()
+      populate_bs(bs, 5)
+
       bs.close()
       bs2.close()
       bs3.close()
 
       self.assertTrue(bs.closed())
       with BackingStore(5, 'foo') as bs:
-         self.assertEqual(bs['a'], None)
+         self.assertEqual(bs['a'], 1)
          self.assertEqual(bs['b'], 2)
          self.assertEqual(bs['c'], 3)
          self.assertEqual(bs['d'], 4)
@@ -412,9 +415,52 @@ class CacheTest(unittest.TestCase):
          self.assertFalse(bs.closed())
       self.assertTrue(bs.closed())
 
+      with BackingStore(3, 'foo') as bs:
+         self.assertEqual(len(bs), 3)
+
+      with self.assertRaises(BStoreClosedError):
+         bs2['a']
+      with self.assertRaises(BStoreClosedError):
+         bs2['a'] = 0
+      with self.assertRaises(BStoreClosedError):
+         del bs2['a']
+      with self.assertRaises(BStoreClosedError):
+         iter(bs2)
+      with self.assertRaises(BStoreClosedError):
+         len(bs2)
+      with self.assertRaises(BStoreClosedError):
+         'a' in bs2
+      with self.assertRaises(BStoreClosedError):
+         bs2.keys()
+      with self.assertRaises(BStoreClosedError):
+         bs2.items()
+      with self.assertRaises(BStoreClosedError):
+         bs2.values()
+      with self.assertRaises(BStoreClosedError):
+         bs2.get('a')
+      with self.assertRaises(BStoreClosedError):
+         bs2.pop('a')
+      with self.assertRaises(BStoreClosedError):
+         bs2.popitem()
+      with self.assertRaises(BStoreClosedError):
+         bs2.clear()
+      with self.assertRaises(BStoreClosedError):
+         bs2.update(bs)
+      with self.assertRaises(BStoreClosedError):
+         bs2.setdefault('a')
+
+      self.assertEqual(str(bs), 'BackingStore: closed')
+
       rm_or_noop('foo.db')
       rm_or_noop('bar.db')
       rm_or_noop('baz.db')
+
+   def test_2_lv_cache_with_bstore(self):
+      bs = BackingStore(3)
+      c2 = Cache(2, lower_mem=bs)
+      c = Cache(1, lower_mem=c2)
+
+      # c.open_bstore()
 
 if __name__ == '__main__':
    unittest.main()
