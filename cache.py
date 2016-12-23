@@ -255,6 +255,18 @@ class Cache(MutableMapping):
             mem = mem.lower_mem
          bs._nondirty_map = nondirty_map
 
+   def _get_lowest_mem(self):
+      mem = self
+      try:
+         while mem.lower_mem is not None:
+            mem = mem.lower_mem
+      except AttributeError:
+         pass
+      return mem
+
+   def _is_lowest_mem_bstore(self):
+      return isinstance(self._get_lowest_mem(), BackingStore)
+
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       if capacity < 1:
          raise ValueError("capacity must be greater than 0")
@@ -378,19 +390,6 @@ class Cache(MutableMapping):
          self[key] = default
          return default
 
-   # TODO: implement open and close of bstore from the top level cache
-   def _get_lowest_mem(self):
-      mem = self
-      try:
-         while mem.lower_mem is not None:
-            mem = mem.lower_mem
-      except AttributeError:
-         pass
-      return mem
-
-   def _is_lowest_mem_bstore(self):
-      return isinstance(self._get_lowest_mem(), BackingStore)
-
    def open_bstore(self):
       if not self._is_lowest_mem_bstore():
          raise NoBStoreError
@@ -408,3 +407,6 @@ class Cache(MutableMapping):
          return bs.closed()
       else:
          return True
+
+   # TODO: implement open and close of bstore from the top level cache as context man
+
