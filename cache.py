@@ -233,13 +233,13 @@ class Cache(MutableMapping):
          self._cache.pop(key)
       except KeyError:
          while (len(self._cache) >= self._capacity):
-            item = self._popitem(False)
+            k, v = self._popitem(False)
             try:
                if self._lower_mem is not None:
-                  self._lower_mem._setitem(item[0], item[1].val, item[1].dirty)
+                  self._lower_mem._setitem(k, v.val, v.dirty)
             except AttributeError:
-               if item[1].dirty:
-                  self._lower_mem[item[0]] = item[1].val
+               if v.dirty:
+                  self._lower_mem[k] = v.val
       self._cache[key] = Cache._Val(dirty, val)
       self._modify_dirty_if_notified()
 
