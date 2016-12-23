@@ -3,17 +3,21 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 import shelve
 
+
 class CacheMiss(Exception):
    def __str__(self):
       return "Cache miss"
+
 
 class NoBStoreError(Exception):
    def __str__(self):
       return "No backing store exists"
 
+
 class BStoreClosedError(Exception):
    def __str__(self):
       return "Backing store not open"
+
 
 class BackingStore(MutableMapping):
    __marker = object()
@@ -31,6 +35,7 @@ class BackingStore(MutableMapping):
       self._capacity = capacity
       self._dbname = dbname
       self._db = None
+      self._nondirty_list = None
 
    @property
    def capacity(self):
@@ -64,7 +69,7 @@ class BackingStore(MutableMapping):
    def __setitem__(self, key, value):
       self._raise_on_bstore_closed()
       while len(self._db) >= self._capacity:
-         self._db.popitem()
+         self.popitem()
       self._db[key] = value
 
    def __delitem__(self, key):
@@ -110,6 +115,7 @@ class BackingStore(MutableMapping):
       return self._db.pop(key) if default == BackingStore.__marker \
          else self._db.pop(key, default)
 
+   # TODO
    def popitem(self):
       self._raise_on_bstore_closed()
       return self._db.popitem()
@@ -144,6 +150,7 @@ class BackingStore(MutableMapping):
    def __exit__(self, exc_type, exc_val, exc_tb):
       self.close()
       return False
+
 
 class Cache(MutableMapping):
    __marker = object()
@@ -185,14 +192,19 @@ class Cache(MutableMapping):
          return entry[0], entry[1].val
       return entry
 
-   def _recurs_pop(self, key):
+   def _recurs_pop_unless_from_bs(self, key):
       try:
-         return self._pop(key)
+         return self._pop(key), False
       except KeyError:
          try:
-            return self._lower_mem._recurs_pop(key)
+            return self.lower_mem._recurs_pop_unless_from_bs(key)
          except AttributeError:
-            raise CacheMiss
+            if self.lower_mem is None:
+               raise CacheMiss
+            try:
+               return self.lower_mem[key], True
+            except KeyError:
+               raise CacheMiss
 
    def _setitem(self, key, val, dirty=True):
       try:
@@ -211,6 +223,7 @@ class Cache(MutableMapping):
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
       self._lower_mem = lower_mem
+
       if not (lower_mem is None or isinstance(lower_mem, Cache) or
                  isinstance(lower_mem, BackingStore)):
          raise TypeError(
@@ -253,9 +266,11 @@ class Cache(MutableMapping):
       return self._lower_mem
 
    def __getitem__(self, key):
-      item = self._recurs_pop(key)
-      self._setitem(key, item.val, item.dirty)
-      return item.val
+      item, from_bstore = self._recurs_pop_unless_from_bs(key)
+      item = item if from_bstore else item.val
+      dirty = False if from_bstore else True
+      self._setitem(key, item, dirty)
+      return item
 
    def __setitem__(self, key, val):
       self._setitem(key, val)

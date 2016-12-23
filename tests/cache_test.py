@@ -507,6 +507,34 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c2.items(), [('e', 5), ('f', 6)])
       self.assertEqual(len(bs), 3)
 
+      bs.clear()
+      bs['a'] = 1
+      bs['c'] = 3
+      bs['d'] = 4
+
+      self.assertEqual(c['g'], 7)
+      self.assertEqual(c['e'], 5)
+      self.assertEqual(c['f'], 6)
+      self.assertEqual(c['a'], 1)
+
+      ct.cascade_dump(c)
+
+      c['a'] = 1
+      print("assigned to a")
+      ct.cascade_dump(c)
+
+      c['c']
+      print("got c")
+      ct.cascade_dump(c)
+
+      c['g']
+      print("got g")
+      ct.cascade_dump(c)
+
+      c['f']
+      print("got f")
+      ct.cascade_dump(c)
+
       c.close_bstore()
 
       ct.rm_or_noop('bstore.db')
