@@ -31,11 +31,18 @@ class BackingStore(MutableMapping):
          while len(self._db) > self._capacity:
             self._db.popitem()
 
+   def _notify_modify_dirty_above_for(self, key):
+      mem = self._upper_mem
+      while mem is not None:
+         mem._modify_key = key
+         mem = mem._upper_mem
+
    def __init__(self, capacity=10, dbname='bstore'):
       self._capacity = capacity
       self._dbname = dbname
       self._db = None
       self._nondirty_map = {}
+      self._upper_mem = None
 
    @property
    def capacity(self):
@@ -120,8 +127,9 @@ class BackingStore(MutableMapping):
       for k in self.keys():
          if k not in self._nondirty_map:
             return k, self._db.pop(k)
-      # TODO send the popped data to the cache that's getting desynced
-      return self._db.popitem()
+      item = self._db.popitem()
+      self._notify_modify_dirty_above_for(item[0])
+      return item
 
    def clear(self):
       self._raise_on_bstore_closed()
@@ -209,6 +217,15 @@ class Cache(MutableMapping):
             except KeyError:
                raise CacheMiss
 
+   def _modify_dirty_if_notified(self):
+      if self._modify_key is not None:
+         try:
+            item = self._cache[self._modify_key]
+            self._cache[self._modify_key] = Cache._Val(True, item.val)
+            self._modify_key = None
+         except KeyError:
+            pass
+
    def _setitem(self, key, val, dirty=True):
       try:
          self._cache.pop(key)
@@ -222,6 +239,7 @@ class Cache(MutableMapping):
                if item[1].dirty:
                   self._lower_mem[item[0]] = item[1].val
       self._cache[key] = Cache._Val(dirty, val)
+      self._modify_dirty_if_notified()
 
    def _send_bs_nondirties(self, *more):
       if self._is_lowest_mem_bstore():
@@ -238,11 +256,16 @@ class Cache(MutableMapping):
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
       self._lower_mem = lower_mem
+      self._upper_mem = None
+      self._modify_key = None
 
       if not (lower_mem is None or isinstance(lower_mem, Cache) or
                  isinstance(lower_mem, BackingStore)):
          raise TypeError(
             "lower_mem must be None or of type Cache or BackingStore")
+
+      if self._lower_mem is not None:
+         self._lower_mem._upper_mem = self
 
       try:
          if isinstance(init_values, list):

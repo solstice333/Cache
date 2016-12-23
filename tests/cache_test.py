@@ -15,14 +15,15 @@ class CacheTest(unittest.TestCase):
    @staticmethod
    def cascade_dump(cache):
       mem = cache
-      print("cascade dump:")
+      s = "cascade dump:\n"
 
       while mem is not None:
-         print("  {}".format(mem))
+         s += "   {}\n".format(mem)
          try:
             mem = mem.lower_mem
          except AttributeError:
             break
+      return s
 
    @staticmethod
    def rm_or_noop(file):
@@ -507,33 +508,73 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c2.items(), [('e', 5), ('f', 6)])
       self.assertEqual(len(bs), 3)
 
+      exp_str = "cascade dump:\n" +\
+           "   Cache: [(g, (True, 7))]\n" +\
+           "   Cache: [(e, (True, 5)), (f, (True, 6))]\n" +\
+           "   BackingStore: [('a', 1), ('c', 3), ('d', 4)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
+
       bs.clear()
       bs['a'] = 1
       bs['c'] = 3
       bs['d'] = 4
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(g, (True, 7))]\n" + \
+                "   Cache: [(e, (True, 5)), (f, (True, 6))]\n" + \
+                "   BackingStore: [('a', 1), ('c', 3), ('d', 4)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
       self.assertEqual(c['g'], 7)
       self.assertEqual(c['e'], 5)
       self.assertEqual(c['f'], 6)
       self.assertEqual(c['a'], 1)
 
-      ct.cascade_dump(c)
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(a, (False, 1))]\n" + \
+                "   Cache: [(e, (True, 5)), (f, (True, 6))]\n" + \
+                "   BackingStore: [('a', 1), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
-      c['a'] = 1
-      print("assigned to a")
-      ct.cascade_dump(c)
+      c['a'] = 2
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(a, (True, 2))]\n" + \
+                "   Cache: [(e, (True, 5)), (f, (True, 6))]\n" + \
+                "   BackingStore: [('a', 1), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
       c['c']
-      print("got c")
-      ct.cascade_dump(c)
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(c, (False, 3))]\n" + \
+                "   Cache: [(f, (True, 6)), (a, (True, 2))]\n" + \
+                "   BackingStore: [('c', 3), ('e', 5), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
       c['g']
-      print("got g")
-      ct.cascade_dump(c)
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(g, (False, 7))]\n" + \
+                "   Cache: [(a, (True, 2)), (c, (False, 3))]\n" + \
+                "   BackingStore: [('c', 3), ('f', 6), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
       c['f']
-      print("got f")
-      ct.cascade_dump(c)
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(f, (True, 6))]\n" + \
+                "   Cache: [(c, (False, 3)), (g, (False, 7))]\n" + \
+                "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
+
+      c['a']
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(a, (False, 2))]\n" + \
+                "   Cache: [(g, (False, 7)), (f, (True, 6))]\n" + \
+                "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
 
       c.close_bstore()
 
