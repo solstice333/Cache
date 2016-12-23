@@ -13,13 +13,16 @@ import string
 
 class CacheTest(unittest.TestCase):
    @staticmethod
-   def dump_caches(cache):
+   def cascade_dump(cache):
       mem = cache
-      print("cache dump:")
+      print("cascade dump:")
 
       while mem is not None:
          print("  {}".format(mem))
-         mem = mem.lower_mem
+         try:
+            mem = mem.lower_mem
+         except AttributeError:
+            break
 
    @staticmethod
    def rm_or_noop(file):
@@ -376,9 +379,9 @@ class CacheTest(unittest.TestCase):
       self.assertTrue('b' in bs)
       self.assertFalse('a' in bs)
 
-      self.assertEqual(sorted(list(bs.keys())), ['b', 'c', 'd', 'e'])
-      self.assertEqual(sorted(list(bs.values())), [2, 3, 4, 5])
-      self.assertEqual(sorted(list(bs.items())),
+      self.assertEqual(sorted(bs.keys()), ['b', 'c', 'd', 'e'])
+      self.assertEqual(sorted(bs.values()), [2, 3, 4, 5])
+      self.assertEqual(sorted(bs.items()),
                        [('b', 2), ('c', 3), ('d', 4), ('e', 5)])
 
       self.assertEqual(bs.get('b'), 2)
@@ -487,6 +490,24 @@ class CacheTest(unittest.TestCase):
       self.assertFalse(c.bstore_closed())
       c.close_bstore()
       self.assertTrue(c.bstore_closed())
+
+      c.open_bstore()
+      c['a'] = 1
+      c['b'] = 2
+      c['c'] = 3
+      c['d'] = 4
+      c['e'] = 5
+      c['f'] = 6
+      self.assertEqual(c.items(), [('f', 6)])
+      self.assertEqual(c2.items(), [('d', 4), ('e', 5)])
+      self.assertEqual(sorted(bs.items()), [('a', 1), ('b', 2), ('c', 3)])
+
+      c['g'] = 7
+      self.assertEqual(c.items(), [('g', 7)])
+      self.assertEqual(c2.items(), [('e', 5), ('f', 6)])
+      self.assertEqual(len(bs), 3)
+
+      c.close_bstore()
 
       ct.rm_or_noop('bstore.db')
 

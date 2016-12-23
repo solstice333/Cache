@@ -85,15 +85,15 @@ class BackingStore(MutableMapping):
 
    def keys(self):
       self._raise_on_bstore_closed()
-      return self._db.keys()
+      return list(self._db.keys())
 
    def items(self):
       self._raise_on_bstore_closed()
-      return self._db.items()
+      return list(self._db.items())
 
    def values(self):
       self._raise_on_bstore_closed()
-      return self._db.values()
+      return list(self._db.values())
 
    def get(self, key, default=None):
       self._raise_on_bstore_closed()
@@ -200,8 +200,12 @@ class Cache(MutableMapping):
       except KeyError:
          while (len(self._cache) >= self._capacity):
             item = self._popitem(False)
-            if self._lower_mem is not None:
-               self._lower_mem._setitem(item[0], item[1].val, item[1].dirty)
+            try:
+               if self._lower_mem is not None:
+                  self._lower_mem._setitem(item[0], item[1].val, item[1].dirty)
+            except AttributeError:
+               if item[1].dirty:
+                  self._lower_mem[item[0]] = item[1].val
       self._cache[key] = Cache._Val(dirty, val)
 
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
@@ -269,7 +273,7 @@ class Cache(MutableMapping):
       return iter(self._cache)
 
    def keys(self):
-      return self._cache.keys()
+      return list(self._cache.keys())
 
    def values(self):
       return [v.val for v in self._cache.values()]
