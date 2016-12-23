@@ -39,6 +39,14 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(self.c1, Cache())
       self.assertNotEqual(self.c1, Cache(capacity=20))
 
+      v1 = Cache._Val(True, 3)
+      v2 = Cache._Val(True, 3)
+      v3 = Cache._Val(False, 3)
+      v4 = Cache._Val(True, 4)
+      self.assertEqual(v1, v2)
+      self.assertNotEqual(v1, v3)
+      self.assertNotEqual(v1, v4)
+
    def test_getitem(self):
       c2 = self.c2
       self.assertEqual(c2['cherry'], 3)

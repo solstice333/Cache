@@ -21,7 +21,7 @@ class Cache(MutableMapping):
          return self.dirty == other.dirty and self.val == other.val
 
       def __ne__(self, other):
-         return self.__eq__(other)
+         return not (self == other)
 
       def __str__(self):
          return "({}, {})".format(self.dirty, self.val)
@@ -151,7 +151,7 @@ class Cache(MutableMapping):
              self._lower_mem == other._lower_mem
 
    def __ne__(self, other):
-      return not self.__eq__(other)
+      return not (self == other)
 
    def pop(self, key, default=__marker):
       return self._pop(key, default, True)
@@ -164,3 +164,9 @@ class Cache(MutableMapping):
 
    def update(self, other):
       self._cache.update(other._items())
+
+   # def setdefault(self, key, default=None):
+   #    try:
+   #       return self[key]
+   #    except CacheMiss:
+   #       self[key] = default
