@@ -656,6 +656,24 @@ class CacheTest(unittest.TestCase):
       self.assertTrue(c.bstore_closed())
       ct.rm_or_noop('bstore.db')
 
+   def test_recommended_usage_example(self):
+      CacheTest.rm_or_noop('bstore.db')
+
+      bs = BackingStore(3)
+      c2 = Cache(2, lower_mem=bs)
+      with Cache(1, lower_mem=c2) as top_cache:
+         top_cache['a'] = 1
+         top_cache['b'] = 2
+         top_cache['c'] = 3
+         top_cache['d'] = 4
+         top_cache['e'] = 5
+         top_cache['f'] = 6
+         print(CacheTest.cascade_dump(top_cache))
+         some_value = top_cache['d']
+         some_value = top_cache['b']
+         print(CacheTest.cascade_dump(top_cache))
+
+      CacheTest.rm_or_noop('bstore.db')
 
 if __name__ == '__main__':
    unittest.main()
