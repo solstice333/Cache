@@ -48,6 +48,8 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c, Cache(init_values=[('foo',1)]))
       c['bar'] = 2
       self.assertEqual(c, Cache(init_values=[('foo',1), ('bar',2)]))
+      c['foo'] = 3
+      self.assertEqual(c, Cache(init_values=[('bar',2), ('foo',3)]))
 
    def test_del(self):
       c2 = self.c2
