@@ -55,6 +55,16 @@ class Cache(MutableMapping):
          except AttributeError:
             raise CacheMiss
 
+   def _setitem(self, key, val, dirty=True):
+      try:
+         self._cache.pop(key)
+      except KeyError:
+         while (len(self._cache) >= self._capacity):
+            item = self._popitem(False)
+            if self._lower_mem is not None:
+               self._lower_mem._setitem(item[0], item[1].val, item[1].dirty)
+      self._cache[key] = Cache._Val(dirty, val)
+
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
       self._lower_mem = lower_mem
@@ -91,19 +101,14 @@ class Cache(MutableMapping):
          for i in range(trim):
             self.popitem(last=True)
 
+   @property
+   def lower_mem(self):
+      return self._lower_mem
+
    def __getitem__(self, key):
       item = self._recurs_pop(key)
       self._setitem(key, item.val, item.dirty)
       return item.val
-
-   def _setitem(self, key, val, dirty=True):
-      try:
-         self._cache.pop(key)
-      except KeyError:
-         while (len(self._cache) >= self._capacity):
-            # TODO: demote down to lower mem. if no lower mem, remove
-            self._cache.popitem(last=False)
-      self._cache[key] = Cache._Val(dirty, val)
 
    def __setitem__(self, key, val):
       self._setitem(key, val)
@@ -142,7 +147,8 @@ class Cache(MutableMapping):
 
    def __eq__(self, other):
       return self._cache == other._cache and \
-             self._capacity == other._capacity
+             self._capacity == other._capacity and \
+             self._lower_mem == other._lower_mem
 
    def __ne__(self, other):
       return not self.__eq__(other)
