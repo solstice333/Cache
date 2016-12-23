@@ -25,7 +25,7 @@ class CacheTest(unittest.TestCase):
       self.assertRaises(TypeError, Cache, init_values='foo')
 
    def test_foo(self):
-      print(self.c2)
+      pass
 
    def test_contains(self):
       self.assertTrue('strawberry' in self.c2)
@@ -146,6 +146,15 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c1, Cache(
          init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
           ('cherry', 3), ('strawberry', 2)]))
+
+   def test_set_default(self):
+      c2 = deepcopy(self.c2)
+      self.assertEqual(c2.setdefault('blueberry'), 1)
+      self.assertEqual(c2.setdefault('mango'), None)
+      self.assertEqual(c2['mango'], None)
+      self.assertEqual(c2.setdefault('blueberry', 100), 1)
+      self.assertEqual(c2.setdefault('peach', 200), 200)
+      self.assertEqual(c2['peach'], 200)
 
    def test_cap_change(self):
       c = deepcopy(self.c3)

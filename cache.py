@@ -165,8 +165,9 @@ class Cache(MutableMapping):
    def update(self, other):
       self._cache.update(other._items())
 
-   # def setdefault(self, key, default=None):
-   #    try:
-   #       return self[key]
-   #    except CacheMiss:
-   #       self[key] = default
+   def setdefault(self, key, default=None):
+      try:
+         return self[key]
+      except CacheMiss:
+         self[key] = default
+         return default
