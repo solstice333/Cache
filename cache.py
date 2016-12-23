@@ -40,6 +40,12 @@ class Cache(MutableMapping):
       except AttributeError:
          return item
 
+   def _popitem(self, last=True, unwrap=False):
+      entry = self._cache.popitem(last)
+      if unwrap:
+         return entry[0], entry[1].val
+      return entry
+
    def _recurs_pop(self, key):
       try:
          return self._pop(key)
@@ -145,8 +151,7 @@ class Cache(MutableMapping):
       return self._pop(key, default, True)
 
    def popitem(self, last=True):
-      entry = self._cache.popitem(last)
-      return entry[0], entry[1].val
+      return self._popitem(last, True)
 
    def clear(self):
       self._cache.clear()
