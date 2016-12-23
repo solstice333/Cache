@@ -2,7 +2,12 @@
 import unittest
 from cache import Cache
 from cache import CacheMiss
+from cache import BackingStore
+from cache import NoBStoreError
 from copy import deepcopy
+import os.path
+import os
+import string
 
 
 class CacheTest(unittest.TestCase):
@@ -23,9 +28,6 @@ class CacheTest(unittest.TestCase):
       self.c4 = Cache(init_values={'a':1, 'b':2})
 
       self.assertRaises(TypeError, Cache, init_values='foo')
-
-   def test_foo(self):
-      pass
 
    def test_contains(self):
       self.assertTrue('strawberry' in self.c2)
@@ -299,6 +301,120 @@ class CacheTest(unittest.TestCase):
       cexp1 = Cache(1, [('g', 7)], lower_mem=cexp2)
       self.assertEqual(c1, cexp1,
                        "set g, demote f to 2, demote b to 3, boot out a")
+
+   def test_bstore(self):
+      def populate_bs(bs, len):
+         max = 5
+         for c, i in zip(string.ascii_lowercase[:len], range(1, max + 1)):
+            bs[c] = i
+
+      def rm_or_noop(file):
+         if os.path.isfile(file):
+            os.remove(file)
+
+      rm_or_noop('foo.db')
+      rm_or_noop('bar.db')
+      rm_or_noop('baz.db')
+
+      bs = BackingStore()
+      self.assertEqual(bs.capacity, 10)
+      self.assertEqual(bs.dbname, 'bstore')
+
+      bs = BackingStore(5, 'foo')
+      self.assertTrue(bs.closed())
+      bs.open()
+      self.assertFalse(bs.closed())
+      bs.close()
+      self.assertTrue(bs.closed())
+      self.assertTrue(os.path.isfile('foo.db'))
+
+      bs.open()
+      with self.assertRaises(KeyError):
+         bs['a']
+      bs['a'] = 1
+      self.assertEqual(bs['a'], 1)
+      self.assertEqual(len(bs), 1)
+      bs['b'] = 2
+      bs['c'] = 3
+      bs['d'] = 4
+      bs['e'] = 5
+      bs['f'] = 6
+      self.assertEqual(len(bs), 5)
+      self.assertTrue(type(iter(bs)).__name__, 'generator')
+
+      bs.clear()
+      self.assertEqual(len(bs), 0)
+      populate_bs(bs, 5)
+
+      self.assertEqual(str(bs),
+                       "BackingStore: [('a', 1), ('b', 2), ('c', 3), "
+                       "('d', 4), ('e', 5)]")
+
+      bs2 = BackingStore(4, 'bar')
+      bs2.open()
+      populate_bs(bs2, 4)
+      self.assertNotEqual(bs, bs2)
+
+      bs3 = BackingStore(5, 'baz')
+      bs3.open()
+      populate_bs(bs3, 5)
+      self.assertEqual(bs, bs3)
+
+      del bs['a']
+      with self.assertRaises(KeyError):
+         bs['a']
+
+      self.assertTrue('b' in bs)
+      self.assertFalse('a' in bs)
+
+      self.assertEqual(sorted(list(bs.keys())), ['b', 'c', 'd', 'e'])
+      self.assertEqual(sorted(list(bs.values())), [2, 3, 4, 5])
+      self.assertEqual(sorted(list(bs.items())),
+                       [('b', 2), ('c', 3), ('d', 4), ('e', 5)])
+
+      self.assertEqual(bs.get('b'), 2)
+      self.assertEqual(bs.get('a'), None)
+      self.assertEqual(bs.get('b', 200), 2)
+      self.assertEqual(bs.get('a', 200), 200)
+
+      self.assertEqual(bs.pop('b'), 2)
+      self.assertRaises(KeyError, bs.pop, 'b')
+      self.assertEqual(bs.pop('b', 300), 300)
+      self.assertEqual(bs.pop('c', 300), 3)
+
+      bs.clear()
+      populate_bs(bs, 5)
+
+      self.assertTrue(isinstance(bs.popitem(), tuple))
+      self.assertEqual(len(bs), 4)
+
+      bs.update(bs2)
+      self.assertEqual(len(bs), 5)
+
+      self.assertEqual(bs.setdefault('a'), 1)
+      self.assertEqual(bs.setdefault('a', 0), 1)
+      del bs['a']
+      self.assertEqual(bs.setdefault('a', 0), 0)
+      del bs['a']
+      self.assertEqual(bs.setdefault('a'), None)
+
+      bs.close()
+      bs2.close()
+      bs3.close()
+
+      self.assertTrue(bs.closed())
+      with BackingStore(5, 'foo') as bs:
+         self.assertEqual(bs['a'], None)
+         self.assertEqual(bs['b'], 2)
+         self.assertEqual(bs['c'], 3)
+         self.assertEqual(bs['d'], 4)
+         self.assertEqual(bs['e'], 5)
+         self.assertFalse(bs.closed())
+      self.assertTrue(bs.closed())
+
+      rm_or_noop('foo.db')
+      rm_or_noop('bar.db')
+      rm_or_noop('baz.db')
 
 if __name__ == '__main__':
    unittest.main()

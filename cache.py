@@ -1,10 +1,142 @@
 #!/usr/bin/env python3.5
 from collections import OrderedDict
 from collections.abc import MutableMapping
+import shelve
 
 class CacheMiss(Exception):
    def __str__(self):
       return "Cache miss"
+
+class NoBStoreError(Exception):
+   def __str__(self):
+      return "No backing store exists"
+
+class BStoreClosedError(Exception):
+   def __str__(self):
+      return "Backing store not open"
+
+class BackingStore(MutableMapping):
+   __marker = object()
+
+   def _raise_on_bstore_closed(self):
+      if self.closed():
+         raise BStoreClosedError
+
+   def __init__(self, capacity=10, dbname='bstore'):
+      self._capacity = capacity
+      self._dbname = dbname
+      self._db = None
+
+   @property
+   def capacity(self):
+      return self._capacity
+
+   @capacity.setter
+   def capacity(self, new_cap):
+      self._capacity = new_cap
+      if self._db:
+         while len(self._db) > self._capacity:
+            self._db.popitem()
+
+   @property
+   def dbname(self):
+      return self._dbname
+
+   def open(self):
+      self._db = shelve.open(self._dbname)
+
+   def close(self):
+      if self._db is not None:
+         self._db.close()
+         self._db = None
+
+   def closed(self):
+      return self._db is None
+
+   def __getitem__(self, key):
+      self._raise_on_bstore_closed()
+      return self._db[key]
+
+   def __setitem__(self, key, value):
+      self._raise_on_bstore_closed()
+      while len(self._db) >= self._capacity:
+         self._db.popitem()
+      self._db[key] = value
+
+   def __delitem__(self, key):
+      self._raise_on_bstore_closed()
+      del self._db[key]
+
+   def __iter__(self):
+      self._raise_on_bstore_closed()
+      return iter(self._db)
+
+   def __len__(self):
+      self._raise_on_bstore_closed()
+      return len(self._db)
+
+   def __contains__(self, item):
+      self._raise_on_bstore_closed()
+      return item in self._db
+
+   def keys(self):
+      self._raise_on_bstore_closed()
+      return self._db.keys()
+
+   def items(self):
+      self._raise_on_bstore_closed()
+      return self._db.items()
+
+   def values(self):
+      self._raise_on_bstore_closed()
+      return self._db.values()
+
+   def get(self, key, default=None):
+      self._raise_on_bstore_closed()
+      return self._db.get(key, default)
+
+   def __eq__(self, other):
+      return self._db == other and self.capacity == other._capacity
+
+   def __ne__(self, other):
+      return self._db != other
+
+   def pop(self, key, default=__marker):
+      self._raise_on_bstore_closed()
+      return self._db.pop(key) if default == BackingStore.__marker \
+         else self._db.pop(key, default)
+
+   def popitem(self):
+      self._raise_on_bstore_closed()
+      return self._db.popitem()
+
+   def clear(self):
+      self._raise_on_bstore_closed()
+      self._db.clear()
+
+   def update(self, other):
+      self._raise_on_bstore_closed()
+      self._db.update(other)
+
+   def setdefault(self, key, default=None):
+      self._raise_on_bstore_closed()
+      return self._db.setdefault(key, default)
+
+   def __str__(self):
+      ldump = []
+      for k, v in self.items():
+         ldump.append((k, v))
+      ldump.sort(key=lambda t: t[0])
+      ldump = [str(i) for i in ldump]
+      return "BackingStore: [{}]".format(", ".join(ldump))
+
+   def __enter__(self):
+      self.open()
+      return self
+
+   def __exit__(self, exc_type, exc_val, exc_tb):
+      self.close()
+      return False
 
 class Cache(MutableMapping):
    __marker = object()
@@ -171,3 +303,13 @@ class Cache(MutableMapping):
       except CacheMiss:
          self[key] = default
          return default
+
+   # TODO: implement open and close of bstore from the top level cache
+   # def open_bstore(self):
+   #    if self._bstore is None:
+   #       raise NoBStoreError
+   #    self._bstore.open()
+   #
+   # def close_bstore(self):
+   #    if self._bstore is not None:
+   #       self._bstore.close()
