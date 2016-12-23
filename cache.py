@@ -38,6 +38,8 @@ class BackingStore(MutableMapping):
          mem = mem._upper_mem
 
    def __init__(self, capacity=10, dbname='bstore'):
+      if capacity < 1:
+         raise ValueError("capacity must be greater than 0")
       self._capacity = capacity
       self._dbname = dbname
       self._db = None
@@ -254,6 +256,8 @@ class Cache(MutableMapping):
          bs._nondirty_map = nondirty_map
 
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
+      if capacity < 1:
+         raise ValueError("capacity must be greater than 0")
       self._capacity = capacity
       self._lower_mem = lower_mem
       self._upper_mem = None

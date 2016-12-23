@@ -468,6 +468,12 @@ class CacheTest(unittest.TestCase):
       CacheTest.rm_or_noop('bar.db')
       CacheTest.rm_or_noop('baz.db')
 
+   def test_capacity(self):
+      with self.assertRaises(ValueError):
+         BackingStore(0)
+      with self.assertRaises(ValueError):
+         Cache(0)
+
    def test_2_lv_cache_with_bstore(self):
       ct = CacheTest
 
