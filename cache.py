@@ -207,6 +207,10 @@ class Cache(MutableMapping):
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
       self._capacity = capacity
       self._lower_mem = lower_mem
+      if not (lower_mem is None or isinstance(lower_mem, Cache) or
+                 isinstance(lower_mem, BackingStore)):
+         raise TypeError(
+            "lower_mem must be None or of type Cache or BackingStore")
 
       try:
          if isinstance(init_values, list):
@@ -312,8 +316,14 @@ class Cache(MutableMapping):
          return default
 
    # TODO: implement open and close of bstore from the top level cache
+   # def _get_lowest_mem(self):
+   #    mem = self
+   #    while mem.lower_mem is not None:
+   #       mem = self.lower_mem
+   #
    # def open_bstore(self):
-   #    if self._bstore is None:
+   #    mem = self._get_lowest_mem()
+   #    if self.lower_mem is None:
    #       raise NoBStoreError
    #    self._bstore.open()
    #

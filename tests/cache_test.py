@@ -29,6 +29,13 @@ class CacheTest(unittest.TestCase):
 
       self.assertRaises(TypeError, Cache, init_values='foo')
 
+   def test_cache_ctor_lower_mem_type_enforce(self):
+      with self.assertRaises(TypeError) as te:
+         Cache(lower_mem=1)
+      self.assertEqual(
+         str(te.exception),
+         "lower_mem must be None or of type Cache or BackingStore")
+
    def test_contains(self):
       self.assertTrue('strawberry' in self.c2)
       self.assertFalse('strawberry' in self.c1)
@@ -455,12 +462,14 @@ class CacheTest(unittest.TestCase):
       rm_or_noop('bar.db')
       rm_or_noop('baz.db')
 
-   def test_2_lv_cache_with_bstore(self):
-      bs = BackingStore(3)
-      c2 = Cache(2, lower_mem=bs)
-      c = Cache(1, lower_mem=c2)
+   # def test_2_lv_cache_with_bstore(self):
+   #    bs = BackingStore(3)
+   #    c2 = Cache(2, lower_mem=bs)
+   #    c = Cache(1, lower_mem=c2)
+   #
+   #    c.open_bstore()
+   #    c.close_bstore()
 
-      # c.open_bstore()
 
 if __name__ == '__main__':
    unittest.main()
