@@ -207,7 +207,7 @@ class Cache(MutableMapping):
 
    def _recurs_pop_unless_from_bs(self, key):
       try:
-         return self._pop(key), False
+         return self._pop(key).val, False
       except KeyError:
          try:
             return self.lower_mem._recurs_pop_unless_from_bs(key)
@@ -321,14 +321,20 @@ class Cache(MutableMapping):
 
    def __getitem__(self, key):
       item, from_bstore = self._recurs_pop_unless_from_bs(key)
-      item = item if from_bstore else item.val
       dirty = False if from_bstore else True
       self._send_bs_nondirties((key, item))
       self._setitem(key, item, dirty)
       return item
 
    def __setitem__(self, key, val):
-      self._send_bs_nondirties()
+      args = []
+      try:
+         item, from_bstore = self._recurs_pop_unless_from_bs(key)
+         dirty = False if from_bstore else True
+         args.append((key, item))
+      except CacheMiss:
+         pass
+      self._send_bs_nondirties(*args)
       self._setitem(key, val)
 
    def __delitem__(self, key):

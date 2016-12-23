@@ -582,6 +582,30 @@ class CacheTest(unittest.TestCase):
                 "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
       self.assertEqual(ct.cascade_dump(c), exp_str)
 
+      c['f'] = 7
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(f, (True, 7))]\n" + \
+                "   Cache: [(g, (False, 7)), (a, (False, 2))]\n" + \
+                "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
+
+      c['a'] = 2
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(a, (True, 2))]\n" + \
+                "   Cache: [(g, (False, 7)), (f, (True, 7))]\n" + \
+                "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
+
+      c['c'] = 4
+
+      exp_str = "cascade dump:\n" + \
+                "   Cache: [(c, (True, 4))]\n" + \
+                "   Cache: [(f, (True, 7)), (a, (True, 2))]\n" + \
+                "   BackingStore: [('a', 2), ('c', 3), ('g', 7)]\n"
+      self.assertEqual(ct.cascade_dump(c), exp_str)
+
       c.close_bstore()
 
       ct.rm_or_noop('bstore.db')
