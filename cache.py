@@ -5,39 +5,75 @@ import shelve
 
 
 class CacheMiss(Exception):
+   """exception for a cache miss"""
+
    def __str__(self):
+      """return string representation of CacheMiss"""
       return "Cache miss"
 
 
 class NoBStoreError(Exception):
+   """exception for no backing store linked to the cache"""
+
    def __str__(self):
+      """return string representation of NoBStoreError"""
       return "No backing store exists"
 
 
 class BStoreClosedError(Exception):
+   """exception for when a backing store hasn't been opened yet"""
+
    def __str__(self):
+      """return string representation of BStoreClosedError"""
       return "Backing store not open"
 
 
 class BackingStore(MutableMapping):
+   """Backing Store class. Link this to a Cache class.
+
+   This class represents a backing store which is the lowest storage to
+   write to after all levels of caches has missed. It is considered
+   persistent non-volatile storage. This class implements the
+   collections.abc.MutableMapping interface which acts as a wrapper on top
+   of shelve.
+   """
+
    __marker = object()
 
    def _raise_on_bstore_closed(self):
+      # if the backing store is closed, raise a BStoreClosedError
       if self.closed():
          raise BStoreClosedError
 
    def _trim_to_capacity(self):
+      # trim down the contents in the backing store until equal to the
+      # maximum capacity. Data is removed randomly.
       if self._db is not None:
          while len(self._db) > self._capacity:
             self._db.popitem()
 
    def _notify_modify_dirty_above_for(self, key):
+      # notify all caches above to look for an entry with key |key|
+      #
+      # Args:
+      #    key: string representing the key to look for
       mem = self._upper_mem
       while mem is not None:
          mem._modify_key = key
          mem = mem._upper_mem
 
    def __init__(self, capacity=10, dbname='bstore'):
+      """BackingStore ctor
+
+      Instantiate a BackingStore object with a maximum capacity of
+      |capacity|, and writes data to a file named "|dbname|.db".
+
+      Args:
+         capacity: integer specifying the maximum capacity the database
+            can hold. Default is 10.
+         dbname: string representing the name of the database/store.
+            Default is 'bstore'
+      """
       if capacity < 1:
          raise ValueError("capacity must be greater than 0")
       self._capacity = capacity
@@ -48,6 +84,12 @@ class BackingStore(MutableMapping):
 
    @property
    def capacity(self):
+      """get/set capacity of store
+
+      On setting, if the backing store is open and the length of the store
+      contents is greater than the capacity, the backing store contents is
+      trimmed down to the new capacity. Data is removed randomly.
+      """
       return self._capacity
 
    @capacity.setter
@@ -57,67 +99,185 @@ class BackingStore(MutableMapping):
 
    @property
    def dbname(self):
+      """get name of database/store"""
       return self._dbname
 
    def open(self):
+      """open the backing store i/o stream
+
+      On opening, if the shelve content length is too large, it is
+      reduced down to the maximum capacity. Data is removed randomly.
+      """
       self._db = shelve.open(self._dbname)
       self._trim_to_capacity()
 
    def close(self):
+      """close the backing store i/o stream"""
       if self._db is not None:
          self._db.close()
          self._db = None
 
    def closed(self):
+      """return True if backing store is closed; False otherwise"""
       return self._db is None
 
    def __getitem__(self, key):
+      """obj[key]
+
+      get data from backing store
+
+      Args:
+         key: string representing the key to look for
+
+      Returns:
+         The data associated with |key|
+
+      Raises:
+         BStoreClosedError: backing store is closed
+         KeyError: |key| doesn't exist
+      """
       self._raise_on_bstore_closed()
       return self._db[key]
 
    def __setitem__(self, key, value):
+      """obj[key] = value
+
+      set data in backing store
+
+      Args:
+         key: string representing the key to associate |value| with
+         value: any data bound to |key|
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       while len(self._db) >= self._capacity:
          self.popitem()
       self._db[key] = value
 
    def __delitem__(self, key):
+      """del obj[key]
+
+      delete data from backing store
+
+      Args:
+         key: string representing key
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       del self._db[key]
 
    def __iter__(self):
+      """return an iterator over the keys in the backing store
+
+      Returns:
+         iterator over the keys in the backing store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return iter(self._db)
 
    def __len__(self):
+      """return the number of itmes in the backing store
+
+      Returns:
+         number of items in the backing store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return len(self._db)
 
-   def __contains__(self, item):
+   def __contains__(self, key):
+      """|key| in obj
+
+      return True if backing store has key; False otherwise
+
+      Args:
+         key: string representing the key
+
+      Returns:
+         True if |key| is in backing store; False otherwise
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
-      return item in self._db
+      return key in self._db
 
    def keys(self):
+      """return a list of the keys in the backing store
+
+      Returns:
+         a list of all the keys in the backing store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return list(self._db.keys())
 
    def items(self):
+      """return a list of (key, value) pairs contained in the backing store
+
+      Returns:
+         a list of (key, value) pairs contained in the backing store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return list(self._db.items())
 
    def values(self):
+      """return a list of the values in the backing store
+
+      Returns:
+         a list of values contained in the backing store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return list(self._db.values())
 
    def get(self, key, default=None):
+      """return the value for |key| if |key| is in the store
+
+      Args:
+         key: string representing the key
+
+      Returns:
+         value for |key|
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return self._db.get(key, default)
 
    def __eq__(self, other):
-      return self._db == other and self.capacity == other._capacity
+      """return True if equal; False otherwise
+
+      Equal if |other| store contents are the same as self and capacity
+      is the same as self's capacity.
+
+      Args:
+         other: another BackingStore instance
+
+      Returns:
+         True if equal; False otherwise
+      """
+      return self._db == other._db and self._capacity == other._capacity
 
    def __ne__(self, other):
-      return self._db != other
+      return not (self == other)
 
    def pop(self, key, default=__marker):
       self._raise_on_bstore_closed()

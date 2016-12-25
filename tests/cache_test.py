@@ -464,6 +464,18 @@ class CacheTest(unittest.TestCase):
       CacheTest.rm_or_noop('bar.db')
       CacheTest.rm_or_noop('baz.db')
 
+      b1 = BackingStore(dbname='foo')
+      b2 = BackingStore(dbname='bar')
+
+      self.assertEqual(b1, b2)
+
+      b2 = BackingStore(9, 'bar')
+
+      print(b1.capacity)
+      print(b2.capacity)
+      self.assertNotEqual(b1, b2)
+
+
    def test_capacity(self):
       with self.assertRaises(ValueError):
          BackingStore(0)
