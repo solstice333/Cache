@@ -265,8 +265,8 @@ class BackingStore(MutableMapping):
    def __eq__(self, other):
       """return True if equal; False otherwise
 
-      Equal if |other| store contents are the same as self and capacity
-      is the same as self's capacity.
+      Equal if |other| store contents have the same (key, value) pairs
+      and capacity is the same as self.
 
       Args:
          other: another BackingStore instance
@@ -277,14 +277,61 @@ class BackingStore(MutableMapping):
       return self._db == other._db and self._capacity == other._capacity
 
    def __ne__(self, other):
+      """return True if not equal; False otherwise
+
+      Not equal if |other| store contents have different (key, value)
+      pairs or capacity is different from self
+
+      Args:
+         other: another BackingStore instance
+
+      Returns:
+         True if not equal; False otherwise
+      """
       return not (self == other)
 
    def pop(self, key, default=__marker):
+      """Remove |key| and return its value if exists in store
+
+      If |key| is in the store, return the value of |key|; otherwise
+      return |default|.
+
+      Args:
+         key: string representing the key
+         default: any data type representing the default return value
+            if |key| is not in store. If |default| is not given, a
+            KeyError is raised.
+
+      Returns:
+         the value associated to |key|, else |default|.
+
+      Raises:
+         KeyError: |key| is not in store
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return self._db.pop(key) if default == BackingStore.__marker \
          else self._db.pop(key, default)
 
    def popitem(self):
+      """Remove and return a (key, value) pair from store
+
+      First, check to see if a key that exists in the store is a key
+      who's dirty value in the upper caches is False. If it is, then
+      remove that (key, value) pair and return it. Otherwise, remove
+      an arbitrary (key, value) pair and return it. The caches above
+      are notified of the removed (key, value) pair so that they
+      can automatically synchronize the dirty value if needed. That is,
+      if a (key, value) pair is removed whose key is in the cache and
+      its value isn't dirty, it will be modified to be dirty so it
+      can be written back to the store.
+
+      Returns:
+         the (key, value) pair removed from the store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       for k in self.keys():
          if k not in self._nondirty_map:
@@ -294,18 +341,56 @@ class BackingStore(MutableMapping):
       return item
 
    def clear(self):
+      """remove all (key, value) pairs from the store
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       self._db.clear()
 
    def update(self, other):
+      """updates the store with (key, value) pairs from another store
+
+      Update the store with (key, value) pairs from the |other| store;
+      Existing keys are overwritten.
+
+      Args:
+         other: another BackingStore instance
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       self._db.update(other)
 
    def setdefault(self, key, default=None):
+      """return key's value if in store, otherwise insert key
+
+      If |key| is in store, return its value, otherwise insert key
+      with a value of |default|.
+
+      Args:
+         key: string representing the key
+         default: the value to insert if |key| doesn't exist in store.
+            Defaults to None.
+
+      Raises:
+         BStoreClosedError: backing store is closed
+      """
       self._raise_on_bstore_closed()
       return self._db.setdefault(key, default)
 
    def __str__(self):
+      """return a string representation of the backing store
+
+      A string representation of the backing store is all the
+      (key, value) pairs sorted by key and listed out. If
+      backing store is closed, prints out "BackingStore: closed".
+
+      Returns:
+         string representation of the backing store
+      """
       ldump = []
       try:
          for k, v in self.items():
@@ -317,10 +402,20 @@ class BackingStore(MutableMapping):
          return "BackingStore: closed"
 
    def __enter__(self):
+      """Open the backing store and return self using the with statement
+
+      Returns:
+         self
+      """
       self.open()
       return self
 
    def __exit__(self, exc_type, exc_val, exc_tb):
+      """Closes the backing store
+
+      Raises:
+         any exception raised from within the runtime context
+      """
       self.close()
       return False
 
