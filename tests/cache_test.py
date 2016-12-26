@@ -188,8 +188,8 @@ class CacheTest(unittest.TestCase):
       c.capacity = 4
       self.assertEqual(
          c, Cache(capacity=4,
-                  init_values=[('foo', 1), ('bar', 2), ('blueberry', 1),
-                               ('cherry', 3)]))
+                  init_values=[('bar', 2), ('blueberry', 1),
+                               ('cherry', 3), ('strawberry', 2)]))
 
    def test_lru_func(self):
       c = deepcopy(self.c2)

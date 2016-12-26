@@ -663,8 +663,8 @@ class Cache(MutableMapping):
 
       Raises:
          ValueError: capacity is less than 1
-         TypeError: lower_mem is not of type Cache or BackingStore
-
+         TypeError: lower_mem is not of type Cache or BackingStore or
+            init_values is not of type list or dict
       """
       if capacity < 1:
          raise ValueError("capacity must be greater than 0")
@@ -699,6 +699,12 @@ class Cache(MutableMapping):
 
    @property
    def capacity(self):
+      """get/set capacity
+
+      When setting capacity lower than the amount of items stored in
+      the cache, items are removed from the beginning of the cache,
+      that is, the LRU items.
+      """
       return self._capacity
 
    @capacity.setter
@@ -707,7 +713,7 @@ class Cache(MutableMapping):
       trim = len(self._cache) - self._capacity
       if (trim > 0):
          for i in range(trim):
-            self.popitem(last=True)
+            self.popitem(last=False)
 
    @property
    def lower_mem(self):
