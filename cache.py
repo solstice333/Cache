@@ -29,7 +29,7 @@ class BStoreClosedError(Exception):
 
 
 class BackingStore(MutableMapping):
-   """Backing Store class. Link this to a Cache class.
+   """Backing Store class. Link this to a Cache object
 
    This class represents a backing store which is the lowest storage to
    write to after all levels of caches has missed. It is considered
@@ -54,6 +54,8 @@ class BackingStore(MutableMapping):
 
    def _notify_modify_dirty_above_for(self, key):
       # notify all caches above to look for an entry with key |key|
+      #
+      # If no cache exists, this is a no-op.
       #
       # Args:
       #    key: string representing the key to look for
@@ -421,32 +423,97 @@ class BackingStore(MutableMapping):
 
 
 class Cache(MutableMapping):
+   """Cache class. Cache and BackingStore objects can be linked to this
+
+   Represents a cache that adheres to an LRU replacement policy,
+   write-back, and write allocate policy. If a backing store is linked
+   downstream, the dirty values in the (key, value) pairs contained
+   in the upper caches are updated accordingly. That is, if a
+   (key, value) pair is removed from the backing store whose
+   key in the upper cache is marked as non-dirty, it is then marked
+   as dirty.
+   """
+
    __marker = object()
 
    class _Val():
+      # Represents a wrapper object for a value in cache
+      #
+      # Binds a dirty bool to a value.
+
       def __init__(self, dirty, val):
+         # instantiate a _Val object
+         #
+         # Args:
+         #     dirty: True if |val| should be written back to store;
+         #        False otherwise
+         #     val: any data type to be stored in the cache
+         #
          self.dirty = bool(dirty)
          self.val = val
 
       def to_tuple(self):
+         # return a _Val as a (dirty, val) pair
          return self.dirty, self.val
 
       def __eq__(self, other):
+         # return True if self is equal to |other|; False otherwise
+         #
+         # Args:
+         #     other: another _Val object
+         #
+         # Returns:
+         #     True if self is equal to |other|; False otherwise
          return self.dirty == other.dirty and self.val == other.val
 
       def __ne__(self, other):
+         # return True if self is not equal to |other|; False otherwise
+         #
+         # Args:
+         #     other: another _Val object
+         #
+         # Returns:
+         #     True if self is not equal |other|; False otherwise
          return not (self == other)
 
       def __str__(self):
+         # return string representation of a _Val object
          return "({}, {})".format(self.dirty, self.val)
 
    def _items(self):
+      # return a list of items in the cache. Items are unwrapped
+      #
+      # Unwrapped means that they are wrapped as a _Val object
+      #
+      # Returns:
+      #     a list of _Val objects. That is, each item is a
+      #     (key, _Val) pair
       return [(k, v) for k, v in self._cache.items()]
 
    def _values(self):
-      return self._cache.values()
+      # return a list of cache values unwrapped
+      #
+      # Unwrapped means that they are wrapped as a _Val object
+      #
+      # Returns:
+      #     a list of cache values of type _Val
+      return list(self._cache.values())
 
    def _pop(self, key, default=__marker, unwrap=False):
+      # removes key from cache and returns it
+      #
+      # If |key| exists in cache, remove it and return its value; otherwise
+      # return |default|. If |default| isn't specified, KeyError is raised.
+      #
+      # Args:
+      #     key: string representing the key
+      #     default: any data to return if
+      #        |key| not found
+      #     unwrap: if True, unwrap the _Val object and return just the
+      #        value; otherwise return the _Val object containing the
+      #        (dirty, value) pair
+      # Raises:
+      #     KeyError: |key| doesn't exist and |default| isn't specified
       item = self._cache.pop(key) if default == Cache.__marker \
          else self._cache.pop(key, default)
       try:
@@ -455,12 +522,39 @@ class Cache(MutableMapping):
          return item
 
    def _popitem(self, last=True, unwrap=False):
+      # removes an item from the cache and returns it
+      #
+      # Args:
+      #     last: if True, returns the last item; otherwise return the
+      #        first
+      #     unwrap: if True, unwrap the _Val object and return just the
+      #        value, else return the _Val (dirty, value) pair
+      #
+      # Returns:
+      #     an item from the cache as either a _Val object or an
+      #     unwrapped value
       entry = self._cache.popitem(last)
       if unwrap:
          return entry[0], entry[1].val
       return entry
 
    def _recurs_pop_unless_from_bs(self, key):
+      # pop |key| from the cache
+      #
+      # If cache miss, recursively check the cache/store below self.
+      # If |key| is found in a cache, remove the (key, value) pair
+      # and return value. If |key| is found in the store, get the
+      # (key, value) without removing it, and return value.
+      #
+      # Args:
+      #     key: string representing the key
+      #
+      # Returns:
+      #     value of key
+      #
+      # Raises:
+      #     CacheMiss: the key doesn't exist in the cache or backing
+      #        store
       try:
          return self._pop(key).val, False
       except KeyError:
@@ -475,6 +569,11 @@ class Cache(MutableMapping):
                raise CacheMiss
 
    def _modify_dirty_if_notified(self):
+      # modify the dirty bool of a value in the cache
+      #
+      # the dirty bool changed is associated to the key specified
+      # by the backing store if exists. If no backing store exists
+      # this a no-op.
       if self._modify_key is not None:
          try:
             item = self._cache[self._modify_key]
@@ -484,6 +583,17 @@ class Cache(MutableMapping):
             pass
 
    def _setitem(self, key, val, dirty=True):
+      # sets item in cache
+      #
+      # the least recently used item in a cache will be pushed down
+      # to lower memory if capacity in the cache is reached. If lower
+      # memory is backing store, then write a dirty item to store;
+      # otherwise, if not dirty, no-op.
+      #
+      # Args:
+      #     key: string representing the key
+      #     val: data representing a value to store
+      #     dirty: bool to set the dirty flag. Defaults to True
       try:
          self._cache.pop(key)
       except KeyError:
@@ -499,6 +609,15 @@ class Cache(MutableMapping):
       self._modify_dirty_if_notified()
 
    def _send_bs_nondirties(self, *more):
+      # send backing store all nondirty items from existing caches
+      #
+      # parses all caches in the chain below for items whose dirty
+      # flags are False and sends a dictionary of this to the backing
+      # store if exists. Includes pairs from |*more|.
+      #
+      # Args:
+      #     *more: (key, value) pairs to add on top of the ones in the
+      #        caches.
       if self._is_lowest_mem_bstore():
          bs = self._get_lowest_mem()
          nondirty_map = dict([*more])
@@ -511,6 +630,14 @@ class Cache(MutableMapping):
          bs._nondirty_map = nondirty_map
 
    def _get_lowest_mem(self):
+      # returns the lowest memory in the chain
+      #
+      # The lowest memory in the chain is either of Cache or
+      # BackingStore type.
+      #
+      # Returns:
+      #     Cache or BackingStore representing the lowest memory in the
+      #     chain.
       mem = self
       try:
          while mem.lower_mem is not None:
@@ -520,9 +647,25 @@ class Cache(MutableMapping):
       return mem
 
    def _is_lowest_mem_bstore(self):
+      # returns True if lowest memory is of type BackingStore
+      #
+      # False otherwise
       return isinstance(self._get_lowest_mem(), BackingStore)
 
    def __init__(self, capacity=10, init_values=None, lower_mem=None):
+      """Instantiate a Cache object.
+
+      Args:
+         capacity: int specifying the capacity of the cache
+         init_values: list of pairs or a dictionary to initialize the
+            cache with
+         lower_mem: Cache or BackingStore to link to self
+
+      Raises:
+         ValueError: capacity is less than 1
+         TypeError: lower_mem is not of type Cache or BackingStore
+
+      """
       if capacity < 1:
          raise ValueError("capacity must be greater than 0")
       self._capacity = capacity
@@ -538,23 +681,19 @@ class Cache(MutableMapping):
       if self._lower_mem is not None:
          self._lower_mem._upper_mem = self
 
-      try:
-         if isinstance(init_values, list):
-            new_od = []
-            for pair in init_values:
-               entry = pair[0], Cache._Val(True, pair[1])
-               new_od.append(entry)
-         elif isinstance(init_values, dict):
-            new_od = {}
-            for k, v in init_values.items():
-               new_od[k] = Cache._Val(True, v)
-         else:
-            raise TypeError
-      except TypeError:
-         if init_values is None:
-            new_od = {}
-         else:
-            raise TypeError('init_values needs to be a list or dict')
+      if isinstance(init_values, list):
+         new_od = []
+         for pair in init_values:
+            entry = pair[0], Cache._Val(True, pair[1])
+            new_od.append(entry)
+      elif isinstance(init_values, dict):
+         new_od = {}
+         for k, v in init_values.items():
+            new_od[k] = Cache._Val(True, v)
+      elif init_values is None:
+         new_od = {}
+      else:
+         raise TypeError('init_values needs to be a list or dict')
 
       self._cache = OrderedDict(new_od)
 
