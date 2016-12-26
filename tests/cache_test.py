@@ -51,8 +51,30 @@ class CacheTest(unittest.TestCase):
          init_values=[('blueberry',1), ('cherry',3), ('strawberry',2)]))
       self.assertNotEqual(self.c2, Cache(capacity=20,
          init_values=[('blueberry', 1), ('cherry', 3), ('strawberry', 2)]))
+      self.assertNotEqual(self.c2, Cache(
+         init_values=[('blueberry', 1), ('cherry', 3),
+                      ('strawberry', 2), ('foo', 4)]))
       self.assertEqual(self.c1, Cache())
       self.assertNotEqual(self.c1, Cache(capacity=20))
+
+      c2 = deepcopy(self.c2)
+      c3 = Cache(init_values=self.c3.items(), lower_mem=c2)
+      self.assertEqual(c3, self.c3)
+      self.assertNotEqual(c3, Cache(init_values=[('bar', 2), ('foo', 1)]))
+
+      bs = BackingStore(dbname='foo')
+      c3 = Cache(2, self.c3.items(), bs)
+      bs.open()
+
+      c3['baz'] = 3
+      c3['bar']
+      c3['foo']
+      c3['bar'] # Cache: [(foo, (True, 1)), (bar, (True, 2))]
+      c4 = Cache(init_values=self.c3.items())
+      self.assertNotEqual(c3, c4)
+
+      bs.close()
+      os.remove('foo.db')
 
       v1 = Cache._Val(True, 3)
       v2 = Cache._Val(True, 3)
@@ -74,6 +96,8 @@ class CacheTest(unittest.TestCase):
       self.assertEqual(c2, Cache(
          init_values=[('cherry', 3), ('blueberry', 1), ('strawberry', 2)]))
       self.assertEqual(len(c2), 3)
+      with self.assertRaises(CacheMiss):
+         c2['foo']
 
    def test_setitem(self):
       c = Cache()
@@ -212,6 +236,9 @@ class CacheTest(unittest.TestCase):
       cexp2 = Cache(4, [('c', 3), ('d', 4)])
       cexp1 = Cache(2, [('a', 1)], lower_mem=cexp2)
       self.assertEqual(c1, cexp1, "expect double lv cache instantiation")
+
+      with self.assertRaises(CacheMiss):
+         c1['e']
 
       c1['d']
       cexp2 = Cache(4, [('c', 3)])

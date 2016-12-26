@@ -91,6 +91,12 @@ class BackingStore(MutableMapping):
       On setting, if the backing store is open and the length of the store
       contents is greater than the capacity, the backing store contents is
       trimmed down to the new capacity. Data is removed randomly.
+
+      Args:
+         new_cap: int specifying new capacity
+
+      Returns:
+         current capacity
       """
       return self._capacity
 
@@ -101,7 +107,11 @@ class BackingStore(MutableMapping):
 
    @property
    def dbname(self):
-      """get name of database/store"""
+      """get name of database/store
+
+      Returns:
+         name of store
+      """
       return self._dbname
 
    def open(self):
@@ -459,6 +469,9 @@ class Cache(MutableMapping):
       def __eq__(self, other):
          # return True if self is equal to |other|; False otherwise
          #
+         # Equal is if dirty flag and val in self is equal to other's
+         # dirty flag and val.
+         #
          # Args:
          #     other: another _Val object
          #
@@ -468,6 +481,9 @@ class Cache(MutableMapping):
 
       def __ne__(self, other):
          # return True if self is not equal to |other|; False otherwise
+         #
+         # Not equal if dirty flag or val in self differs from other's
+         # dirty flag and val
          #
          # Args:
          #     other: another _Val object
@@ -481,7 +497,7 @@ class Cache(MutableMapping):
          return "({}, {})".format(self.dirty, self.val)
 
    def _items(self):
-      # return a list of items in the cache. Items are unwrapped
+      # return a list of items in the self cache. Items are unwrapped
       #
       # Unwrapped means that they are wrapped as a _Val object
       #
@@ -491,7 +507,7 @@ class Cache(MutableMapping):
       return [(k, v) for k, v in self._cache.items()]
 
    def _values(self):
-      # return a list of cache values unwrapped
+      # return a list of values from the self cache unwrapped
       #
       # Unwrapped means that they are wrapped as a _Val object
       #
@@ -500,7 +516,7 @@ class Cache(MutableMapping):
       return list(self._cache.values())
 
    def _pop(self, key, default=__marker, unwrap=False):
-      # removes key from cache and returns it
+      # removes key from self cache and returns it
       #
       # If |key| exists in cache, remove it and return its value; otherwise
       # return |default|. If |default| isn't specified, KeyError is raised.
@@ -524,15 +540,21 @@ class Cache(MutableMapping):
    def _popitem(self, last=True, unwrap=False):
       # removes an item from the cache and returns it
       #
+      # The item returned is a (key, value) pair
+      #
       # Args:
       #     last: if True, returns the last item; otherwise return the
       #        first
-      #     unwrap: if True, unwrap the _Val object and return just the
+      #     unwrap: if True, unwrap the _Val object and return the
       #        value, else return the _Val (dirty, value) pair
       #
       # Returns:
-      #     an item from the cache as either a _Val object or an
-      #     unwrapped value
+      #     an item, (key, value) pair, from the cache. If unwrap is
+      #     True, (key, value) is returned where value is the raw
+      #     data originally put in. If unwrap is False, (key, value)
+      #     is returned where value is a _Val object representing
+      #     a (dirty, value) pair, thus (key, (dirty, value)) is
+      #     returned.
       entry = self._cache.popitem(last)
       if unwrap:
          return entry[0], entry[1].val
@@ -704,6 +726,12 @@ class Cache(MutableMapping):
       When setting capacity lower than the amount of items stored in
       the cache, items are removed from the beginning of the cache,
       that is, the LRU items.
+
+      Args:
+         new_cap: int specifying new capacity
+
+      Returns:
+         current capacity
       """
       return self._capacity
 
@@ -717,9 +745,31 @@ class Cache(MutableMapping):
 
    @property
    def lower_mem(self):
+      """return lower memory instance
+
+      Lower memory instance is the Cache or BackingStore object
+      linked to this cache.
+      """
       return self._lower_mem
 
    def __getitem__(self, key):
+      """cache[key]
+
+      Get the item associated to key |key|. The item will be searched
+      for starting at self and moving down to lower memory. If an item
+      is found, it is returned and the item is placed at the top cache
+      with other items moving down in LRU order.
+
+      Args:
+         key: string representing the key
+
+      Returns:
+         the item belonging to |key|
+
+      Raises:
+         CacheMiss: |key| doesn't match anything in caches or backing
+            store
+      """
       item, from_bstore = self._recurs_pop_unless_from_bs(key)
       dirty = False if from_bstore else True
       self._send_bs_nondirties((key, item))
@@ -727,6 +777,15 @@ class Cache(MutableMapping):
       return item
 
    def __setitem__(self, key, val):
+      """cache[key] = val
+
+      set (key, val) into the cache while moving items down in LRU
+      order.
+
+      Args:
+         key: string representing key
+         val: data to set with key |key|
+      """
       args = []
       try:
          item, from_bstore = self._recurs_pop_unless_from_bs(key)
@@ -738,58 +797,187 @@ class Cache(MutableMapping):
       self._setitem(key, val)
 
    def __delitem__(self, key):
+      """del cache[key]
+
+      Removes item with key |key| from self cache
+
+      Args:
+         key: string representing key to remove
+      """
       del self._cache[key]
 
    def __len__(self):
+      """len(cache)
+
+      Returns:
+         number of items in self cache
+      """
       return len(self._cache)
 
    def items(self):
+      """return list of (key, value) pairs in self cache
+
+      Returns:
+         list of (key, value) pairs
+      """
       return [(k, v.val) for k, v in self._cache.items()]
 
    def __iter__(self):
+      """return iterator over keys in self cache
+
+      Returns:
+         iterator over keys in self cache
+      """
       return iter(self._cache)
 
    def keys(self):
+      """return list of keys in self cache
+
+      Returns:
+         list of keys in self cache
+      """
       return list(self._cache.keys())
 
    def values(self):
+      """return list of values in self cache
+
+      Returns:
+         list of values in self cache
+      """
       return [v.val for v in self._cache.values()]
 
    def __str__(self):
+      """return string representation of self cache
+
+      string representation is the following:
+      "Cache: [(k0, v0), (k1, v1), ... (kn, vn)]"
+
+      Returns:
+         string representation of self cache
+      """
       return "Cache: [" + \
              ", ".join(
                 ["({}, {})".format(
                    k, v) for k, v in self._items()]) + \
              "]"
 
-   def __contains__(self, item):
-      return item in self._cache
+   def __contains__(self, key):
+      """return True if key is in the self cache
+
+      Args:
+         key: string representing the key
+      """
+      return key in self._cache
 
    def get(self, key, default=None):
+      """return the value of |key| if exists in self cache
+
+      Default otherwise.
+
+      Args:
+         key: string representing the key
+         default: value returned if key doesn't exist. Defaults to None
+
+      Returns:
+         value of |key| if exists in self cache; otherwise returns
+         default
+      """
       got = self._cache.get(key, default)
       return got.val if got is not default else got
 
    def __eq__(self, other):
+      """return True if self is equal to |other| Cache
+
+      Equal if self cache has the same (key, value) pairs in the same
+      order and if capacity is the same. Values are different if the
+      dirty flags differ.
+
+      Args:
+         other: another Cache instance
+
+      Returns:
+         True if self and |other| Cache instances are the same; False
+         otherwise.
+      """
       return self._cache == other._cache and \
-             self._capacity == other._capacity and \
-             self._lower_mem == other._lower_mem
+             self._capacity == other._capacity
 
    def __ne__(self, other):
+      """return True if self is not equal to |other| Cache
+
+      See __eq__() for description of Cache equality
+
+      Args:
+         other: another Cache instance
+
+      Returns:
+         True if self and |other| Cache instances are different. False
+         otherwise.
+      """
       return not (self == other)
 
    def pop(self, key, default=__marker):
+      """If exists, remove |key| from self cache and return its value
+
+      Otherwise, return default. If default is not specified a KeyError
+      is raised.
+
+      Args:
+         key: string representing the key
+         default: default value to return if |key| doesn't exist.
+
+      Return:
+         Value of key if exists
+
+      Raises:
+         KeyError: key doesn't exist
+      """
       return self._pop(key, default, True)
 
    def popitem(self, last=True):
+      """Remove and return (key, value) pair in self cache
+
+      Removes and returns the last (key, value) pair if last is True;
+      otherwise, returns the first (key, value) pair. The first
+      (key, value) pair is the LRU item, that is, removing the last
+      item in the cache goes in LIFO order.
+
+      Args:
+         last: if True, returns last item in cache (LIFO). Defaults
+            to True. False returns first item in cache (FIFO).
+
+      Returns:
+         last item in cache or first item in cache. This is a
+         (key, value) pair.
+      """
       return self._popitem(last, True)
 
    def clear(self):
+      """Remove all items in the self cache"""
       self._cache.clear()
 
    def update(self, other):
+      """update self cache with items from other cache
+
+      (key, value) pairs from other overwrite existing keys
+
+      Args:
+         other: other Cache instance
+      """
       self._cache.update(other._items())
 
    def setdefault(self, key, default=None):
+      """return key's value if key is in self cache
+
+      Otherwise insert key with a value of |default| and return default.
+
+      Args:
+         default: if key doesn't exist in cache, insert the key with
+            this value and return it
+
+      Returns:
+         the value of |key| if exists in self cache, otherwise default
+      """
       try:
          return self[key]
       except CacheMiss:
@@ -797,17 +985,38 @@ class Cache(MutableMapping):
          return default
 
    def open_bstore(self):
+      """open backing store
+
+      if lowest memory in the chain is a BackingStore object
+
+      Raises:
+         NoBStoreError: lowest memory in the chain is not a BackingStore
+            object
+      """
       if not self._is_lowest_mem_bstore():
          raise NoBStoreError
       bs = self._get_lowest_mem()
       bs.open()
 
    def close_bstore(self):
+      """close backing store
+
+      if lowest memory in the chain is a BackingStore object.
+      No-op otherwise.
+      """
       if self._is_lowest_mem_bstore():
          bs = self._get_lowest_mem()
          bs.close()
 
    def bstore_closed(self):
+      """return True if backing store is closed
+
+      If lowest memroy in the chain is not a BackingStore object,
+      True is returned anyway.
+
+      Returns:
+         True if backing store closed or nonexistent; False otherwise
+      """
       if self._is_lowest_mem_bstore():
          bs = self._get_lowest_mem()
          return bs.closed()
@@ -815,9 +1024,23 @@ class Cache(MutableMapping):
          return True
 
    def __enter__(self):
+      """opens the backing store using the "with" context manager
+
+      calls open_bstore(). See above for description.
+
+      Returns:
+         self
+      """
       self.open_bstore()
       return self
 
    def __exit__(self, exc_type, exc_val, exc_tb):
+      """closes the backing store at the end of the "with" context
+
+      calls close_bstore(). See above for description.
+
+      Raises:
+         any exceptions thrown in the "with" context
+      """
       self.close_bstore()
       return False
