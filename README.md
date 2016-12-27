@@ -16,37 +16,42 @@ backing store, it is marked as non-dirty, otherwise it is still dirty. If the
 entry is not found in the backing store or the lowest level memory, it is
 considered to be the "final" cache miss and a CacheMiss exception is raised.
 The user can use simple try/except handling to handle this as desired. Any type
-of data is permitted into the cache and backing store. There are two main
-classes -- the Cache class and the BackingStore class. Both implement the
-collections.abc.MutableMapping interfaces which take advantage of Python
-(Abstract Base Classes) ABC's to define a dictionary-like interface. There are
-also three main exceptions included in the cache module -- the CacheMiss
-exception for whenever a cache miss occurs, the NoBStoreError exception for
-when an operation is done that requires a backing store to exist at the bottom
-of the memory chain, and the BStoreClosedError exception for when an operation
-is done that requires the backing store to be open. The Cache class is a
-wrapper on top of collections.OrderedDict that creates a FIFO where any new
-entry is added to the tail, while the LRU entry is popped from the head and
-pushed to the next level cache if that exists; otherwise it is dropped or added
-to the backing store if that exists. Likewise, if an existing value in one of
-the caches is fetched, it would be popped from its current location and pushed
-to the tail at the top level cache. If it is fetched from the backing store, it
-is almost all the time NOT popped from there, since its purpose is persistence,
-but still copied into the top level cache marked as non-dirty. The only special
-case where a fetched value from the backing store is popped is if capacity is
-full in all memory levels and a new dirty value needs to be written into the
-backing store. In other words, the backing store tries to prioritize not
-popping out any values that are marked non-dirty in the caches. If this is not
-possible, and something needs to be popped out, the cache holding the matching
-entry of the popped entry previously in the backing store, then, marks that
-entry as dirty to make sure it resynchronizes with the backing store later on.
-The BackingStore class is a wrapper on top of shelve, a persistent
+of data is permitted into the cache and backing store.
+
+There are two main classes -- the Cache class and the BackingStore class. Both
+implement the collections.abc.MutableMapping interfaces which take advantage
+of Python (Abstract Base Classes) ABC's to define a dictionary-like interface. 
+There are also three main exceptions included in the cache module -- the 
+CacheMiss exception for whenever a cache miss occurs, the NoBStoreError 
+exception for when an operation is done that requires a backing store to 
+exist at the bottom of the memory chain, and the BStoreClosedError exception
+for when an operation is done that requires the backing store to be open.
+
+The Cache class is a wrapper on top of collections.OrderedDict that creates
+a FIFO where any new entry is added to the tail, while the LRU entry is popped
+from the head and pushed to the next level cache if that exists; otherwise it
+is dropped or added to the backing store if that exists. Likewise, if 
+an existing value in one of the caches is fetched, it would be popped from its
+current location and pushed to the tail at the top level cache. If it is 
+fetched from the backing store, it is almost all the time NOT popped from 
+there, since its purpose is persistence, but still copied into the top level 
+cache marked as non-dirty. The only special case where a fetched value from
+the backing store is popped is if capacity is full in all memory levels and
+a new dirty value needs to be written into the backing store. In other words,
+the backing store tries to prioritize not popping out any values that are marked
+non-dirty in the caches. If this is not possible, and something needs to be
+popped out, the cache holding the matching entry of the popped entry previously
+in the backing store, then, marks that entry as dirty to make sure 
+it resynchronizes with the backing store later on.
+
+The BackingStore class is a wrapper on top of shelve, a persistent 
 dictionary-like object. As mentioned above, the backing store will receive
-entries from the last cache in the chain if the entry is considered dirty. When
-the entry is dirty, that just means it hasn't been written to the persistence
-layer yet and thus requires synchronization. When the backing store reaches
-maximum capacity and needs to kick out an entry that exists in cache, it will
-notify the cache, who has that entry, to mark the entry as dirty.
+entries from the last cache in the chain if the entry is considered dirty.
+When the entry is dirty, that just means it hasn't been written to the
+persistence layer yet and thus requires synchronization. When the backing
+store reaches maximum capacity and needs to kick out an entry that exists
+in cache, it will notify the cache, who has that entry, to mark the entry as
+dirty.
 
 ## Test Plan:
 
