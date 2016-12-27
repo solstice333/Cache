@@ -56,6 +56,7 @@ dirty.
 ## Test Plan:
 
 The test plan uses the unittest module and involves the following unit tests:
+
 1. setUp(): method test fundamental Cache ctors
 2. test_cache_ctor_lower_mem_type_enforce(): test type enforcement of the `lower_mem` keyword arg which must be Cache or BackingStore only
 3. test_contains(): test `__contains__()` method for Cache 
