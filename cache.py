@@ -600,9 +600,10 @@ class Cache(MutableMapping):
          try:
             item = self._cache[self._modify_key]
             self._cache[self._modify_key] = Cache._Val(True, item.val)
-            self._modify_key = None
          except KeyError:
             pass
+         finally:
+            self._modify_key = None
 
    def _setitem(self, key, val, dirty=True):
       # sets item in cache
