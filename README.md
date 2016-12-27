@@ -57,9 +57,8 @@ dirty.
 
 The test plan uses the unittest module and involves the following unit tests:
 1. setUp(): method test fundamental Cache ctors
-2. test_cache_ctor_lower_mem_type_enforce(): test type enforcement of the
-   `lower_mem` keyword arg which must be Cache or BackingStore only
-3. test_contains(): test `__contains__()` method for Cache
+2. test_cache_ctor_lower_mem_type_enforce(): test type enforcement of the `lower_mem` keyword arg which must be Cache or BackingStore only
+3. test_contains(): test `__contains__()` method for Cache 
 4. test_eq_ne(): test `__eq__()`, `__ne__()` methods for Cache and Cache._Val
 5. test_getitem(): test `__getitem__()` method for Cache
 6. test_setitem(): test `__setitem__()` method for Cache
@@ -82,10 +81,8 @@ The test plan uses the unittest module and involves the following unit tests:
 23. test_cache_triple_lv(): test a triple level cache
 24. test_bstore(): test all methods in BackingStore class
 25. test_capacity(): assert that setting capacity < 1 raises a ValueError
-26. test_2_lv_cache_with_bstore(): integration test testing 2 level cache with   
-   a backing store
-27. test_recommended_usage_example(): test the recommended usage of 
-Cache/BackingStore which utilizes the with context manager
+26. test_2_lv_cache_with_bstore(): integration test testing 2 level cache with a backing store
+27. test_recommended_usage_example(): test the recommended usage of Cache/BackingStore which utilizes the with context manager
 
 ## Usage:
 
