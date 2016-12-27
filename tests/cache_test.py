@@ -498,8 +498,6 @@ class CacheTest(unittest.TestCase):
 
       b2 = BackingStore(9, 'bar')
 
-      print(b1.capacity)
-      print(b2.capacity)
       self.assertNotEqual(b1, b2)
 
 
